@@ -34,9 +34,8 @@ export default function App() {
   ]);
   
   // API settings state
-  const [apiKey, setApiKey] = useState('');
-  const [provider, setProvider] = useState<'local' | 'azure-openai'>('local');
-  const [savedSettings, setSavedSettings] = useState(false);
+  const [provider, setProvider] = useState<'local' | 'azure-openai'>('azure-openai');
+  const [savedSettings, setSavedSettings] = useState(true);
 
   const logEvent = (msg: string) => {
     const time = new Date().toLocaleTimeString();
@@ -365,7 +364,7 @@ export default function App() {
                   SUTRA AI Engine Config
                 </h3>
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
-                  Configure your Azure OpenAI credentials to run live enterprise GenAI.
+                  Configure your server-side OpenAI credentials.
                 </span>
               </div>
 
@@ -378,27 +377,21 @@ export default function App() {
                     onChange={(e) => setProvider(e.target.value as any)}
                     style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', outline: 'none', marginTop: '4px' }}
                   >
-                    <option value="local">🤖 Local RAG Optimizer Engine (Offline Proof)</option>
-                    <option value="azure-openai">☁️ Azure OpenAI Service (Credits consumption)</option>
+                    <option value="azure-openai">☁️ Azure Server API (Using Azure Env variables)</option>
+                    <option value="local">🤖 Local RAG fallback (Offline Simulation)</option>
                   </select>
                 </div>
 
-                {provider === 'azure-openai' && (
-                  <>
-                    <div>
-                      <span style={{ color: 'var(--text-secondary)' }}>Azure OpenAI Key / Endpoint</span>
-                      <input 
-                        type="password" 
-                        placeholder="Paste Azure OpenAI Resource Key" 
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', outline: 'none', marginTop: '4px' }}
-                      />
-                    </div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', background: 'rgba(255, 255, 255, 0.02)', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>
-                      🔑 *Note:* This key is securely stored in local session storage and proxy-sent via serverless Azure Functions. No keys are ever exposed or log-recorded.
-                    </div>
-                  </>
+                {provider === 'azure-openai' ? (
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' }}>
+                    🔒 **Server-Side Credentials Active**:<br />
+                    SUTRA will query the serverless Azure Function `/api/chat` using the keys securely configured in your Azure Portal. No keys are required in the client browser.
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' }}>
+                    🤖 **Offline Simulation Fallback**:<br />
+                    SUTRA will resolve queries instantly inside the browser using the local client-side RAG index.
+                  </div>
                 )}
 
               </div>
