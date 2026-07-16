@@ -33,6 +33,8 @@ module.exports = async function (context, req) {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+  const apiErrors = [];
+
   const systemPrompt = `You are SUTRA, the Stadium Unified Tournament Response Assistant for the FIFA World Cup 2026.
 You are interacting with a user in the context of the '${persona.toUpperCase()}' persona.
 
@@ -49,7 +51,12 @@ Guidelines:
   // 1. Try Azure OpenAI if configured
   if (AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT) {
     try {
-      const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-02-15-preview`;
+      // Clean trailing slash from endpoint if present
+      const cleanEndpoint = AZURE_OPENAI_ENDPOINT.endsWith('/') 
+        ? AZURE_OPENAI_ENDPOINT.slice(0, -1) 
+        : AZURE_OPENAI_ENDPOINT;
+
+      const url = `${cleanEndpoint}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-02-15-preview`;
       
       const messages = [
         { role: "system", content: systemPrompt },
@@ -82,9 +89,11 @@ Guidelines:
       } else {
         const errText = await response.text();
         context.log.error("Azure OpenAI API Error: " + errText);
+        apiErrors.push(`Azure OpenAI error (Status ${response.status}): ${errText}`);
       }
     } catch (err) {
       context.log.error("Azure OpenAI Connection Error: " + err.message);
+      apiErrors.push(`Azure OpenAI Connection error: ${err.message}`);
     }
   }
 
@@ -125,9 +134,11 @@ Guidelines:
       } else {
         const errText = await response.text();
         context.log.error("Standard OpenAI API Error: " + errText);
+        apiErrors.push(`Standard OpenAI error (Status ${response.status}): ${errText}`);
       }
     } catch (err) {
       context.log.error("Standard OpenAI Connection Error: " + err.message);
+      apiErrors.push(`Standard OpenAI Connection error: ${err.message}`);
     }
   }
 
@@ -178,14 +189,16 @@ Guidelines:
       } else {
         const errText = await response.text();
         context.log.error("Gemini API Error: " + errText);
+        apiErrors.push(`Gemini error (Status ${response.status}): ${errText}`);
       }
     } catch (err) {
       context.log.error("Gemini Connection Error: " + err.message);
+      apiErrors.push(`Gemini Connection error: ${err.message}`);
     }
   }
 
   // 3. Fallback: Simulated High-Fidelity Local AI Agent (if offline/unconfigured)
-  context.log('No valid API keys set. Resolving request via Local Simulation.');
+  context.log('No valid API keys set or connection failed. Resolving request via Local Simulation.');
   
   const azureKeyStatus = AZURE_OPENAI_KEY ? `Configured (Length: ${AZURE_OPENAI_KEY.length})` : "Missing";
   const azureEndpointStatus = AZURE_OPENAI_ENDPOINT ? "Configured" : "Missing";
@@ -196,7 +209,7 @@ Guidelines:
     status: 200,
     headers: { "Content-Type": "application/json" },
     body: {
-      reply: `☁️ **Azure Function Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n*Note:* If you see "Missing" above, please go to your **Azure Static Web App -> Configuration** settings in the portal, add the missing variables, save, and refresh. No keys are ever exposed to the client.`
+      reply: `☁️ **Azure Function Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check that your deployment name, endpoints, or key strings are correct inside the Azure Static Web App portal configuration.`
     }
   };
 };
