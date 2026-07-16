@@ -328,11 +328,11 @@ body {
 
 /* Custom Grid Configurations */
 .layout-grid {
-  display: grid;
-  grid-template-columns: 43% 57%;
+  display: flex;
   gap: 20px;
   height: calc(100vh - var(--nav-height) - 40px);
   padding: 0 20px 20px 20px;
+  overflow: hidden;
 }
 
 @media (max-width: 1100px) {

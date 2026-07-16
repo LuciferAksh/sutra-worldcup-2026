@@ -260,7 +260,7 @@ export default function App() {
       <main className="layout-grid">
         
         {/* Left Side: Dynamic Persona Dashboards */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', width: '43%', height: '100%', overflowY: 'auto', paddingRight: '8px', flexShrink: 0 }}>
           
           <AnimatePresence mode="wait">
             
@@ -328,7 +328,7 @@ export default function App() {
         </div>
 
         {/* Right Side: Constant Interactive Stadium Blueprint */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', width: '57%', height: '100%', flexShrink: 0 }}>
           <StadiumMap 
             mode={activePersona === 'fan' ? 'wayfinding' : activePersona === 'staff' ? 'incidents' : 'heatmap'}
             selectedFeatureId={selectedFeature ? selectedFeature.id : null}
