@@ -261,7 +261,7 @@ export default function App() {
       <main className="layout-grid">
         
         {/* Left Side: Dynamic Persona Dashboards */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', paddingRight: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
           
           <AnimatePresence mode="wait">
             
