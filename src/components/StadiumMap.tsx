@@ -50,6 +50,14 @@ export const MAP_FEATURES: MapFeature[] = [
   { id: 'restroom-family', name: 'Accessible Restroom D', type: 'restroom', x: 120, y: 340, details: 'Spacious all-gender family restroom. Diaper sorting bins.' }
 ];
 
+// High-fidelity sector shapes
+export const SECTOR_SECTIONS = [
+  { id: 'sec-north', path: 'M 190 70 A 230 230 0 0 1 410 70 L 370 140 A 150 150 0 0 0 230 140 Z', color: 'rgba(255, 26, 83, 0.4)', stroke: 'var(--alarm-crimson)', density: 'High (89%)', name: 'North Stand (Sector Alpha)' },
+  { id: 'sec-east', path: 'M 410 70 A 230 230 0 0 1 530 300 A 230 230 0 0 1 410 530 L 370 460 A 150 150 0 0 0 450 300 A 150 150 0 0 0 370 140 Z', color: 'rgba(255, 170, 0, 0.4)', stroke: 'var(--warning-amber)', density: 'Moderate (65%)', name: 'East Stand (Sector Beta)' },
+  { id: 'sec-south', path: 'M 410 530 A 230 230 0 0 1 190 530 L 230 460 A 150 150 0 0 0 370 460 Z', color: 'rgba(0, 255, 170, 0.4)', stroke: 'var(--fifa-green)', density: 'Low (32%)', name: 'South Stand (Sector Gamma)' },
+  { id: 'sec-west', path: 'M 190 530 A 230 230 0 0 1 70 300 A 230 230 0 0 1 190 70 L 230 140 A 150 150 0 0 0 150 300 A 150 150 0 0 0 230 460 Z', color: 'rgba(255, 170, 0, 0.4)', stroke: 'var(--warning-amber)', density: 'Moderate (58%)', name: 'West Stand (Sector Delta)' }
+];
+
 export const StadiumMap: React.FC<StadiumMapProps> = ({
   mode,
   selectedFeatureId,
@@ -66,14 +74,6 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredFeature, setHoveredFeature] = useState<MapFeature | null>(null);
   const lastMoveRef = useRef(0);
-
-  // High-fidelity sector shapes
-  const SECTOR_SECTIONS = [
-    { id: 'sec-north', path: 'M 190 70 A 230 230 0 0 1 410 70 L 370 140 A 150 150 0 0 0 230 140 Z', color: 'rgba(255, 26, 83, 0.4)', stroke: 'var(--alarm-crimson)', density: 'High (89%)', name: 'North Stand (Sector Alpha)' },
-    { id: 'sec-east', path: 'M 410 70 A 230 230 0 0 1 530 300 A 230 230 0 0 1 410 530 L 370 460 A 150 150 0 0 0 450 300 A 150 150 0 0 0 370 140 Z', color: 'rgba(255, 170, 0, 0.4)', stroke: 'var(--warning-amber)', density: 'Moderate (65%)', name: 'East Stand (Sector Beta)' },
-    { id: 'sec-south', path: 'M 410 530 A 230 230 0 0 1 190 530 L 230 460 A 150 150 0 0 0 370 460 Z', color: 'rgba(0, 255, 170, 0.4)', stroke: 'var(--fifa-green)', density: 'Low (32%)', name: 'South Stand (Sector Gamma)' },
-    { id: 'sec-west', path: 'M 190 530 A 230 230 0 0 1 70 300 A 230 230 0 0 1 190 70 L 230 140 A 150 150 0 0 0 150 300 A 150 150 0 0 0 230 460 Z', color: 'rgba(255, 170, 0, 0.4)', stroke: 'var(--warning-amber)', density: 'Moderate (58%)', name: 'West Stand (Sector Delta)' }
-  ];
 
   const getWaypointCoords = (id: string) => {
     const feature = MAP_FEATURES.find(f => f.id === id);

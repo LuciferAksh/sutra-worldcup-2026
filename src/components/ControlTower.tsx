@@ -11,6 +11,19 @@ interface ControlTowerProps {
   onSelectIncident: (incident: IncidentMarker) => void;
 }
 
+const SUSTAINABILITY_DATA = [
+  { category: 'Compost (Food)', Recycled: 4.8, Landfill: 0.2 },
+  { category: 'Plastics (PET)', Recycled: 8.2, Landfill: 0.9 },
+  { category: 'Alu Cans', Recycled: 6.5, Landfill: 0.1 },
+  { category: 'Paper/Card', Recycled: 3.1, Landfill: 2.4 },
+];
+
+const PREDICTIVE_ALERTS = [
+  { id: 'pa-1', title: '🚨 GATE C CROWD DENSITY PEAK', desc: 'Predictive flows indicate queue times at Gate C will exceed 24 mins by 20:45. Recommendation: Broadcast alternate route advisories to Fan portals.', time: '2m ago', severity: 'high' },
+  { id: 'pa-2', title: '⚡ LOT SILVER EV OVERLOAD', desc: 'EV charging stations drawing high grid power load (85kW). Activating solar backer grids.', time: '12m ago', severity: 'moderate' },
+  { id: 'pa-3', title: '♿ LIFT MOTOR TEMPERATURE WARN', desc: 'West elevator lift motor thermal sensors at 78C. Dispatching engineering tech team.', time: '18m ago', severity: 'low' },
+];
+
 export const ControlTower: React.FC<ControlTowerProps> = ({
   incidents,
   onTriggerRandomIncident,
@@ -26,19 +39,6 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
     { hour: '20:00', GateA: 9500 * crowdMultiplier, GateB: 8400 * crowdMultiplier, GateC: 11200 * crowdMultiplier, GateD: 5900 * crowdMultiplier },
     { hour: '20:30 (Live)', GateA: 10400 * crowdMultiplier, GateB: 9200 * crowdMultiplier, GateC: 12500 * crowdMultiplier, GateD: 6400 * crowdMultiplier },
   ], [crowdMultiplier]);
-
-  const sustainabilityData = [
-    { category: 'Compost (Food)', Recycled: 4.8, Landfill: 0.2 },
-    { category: 'Plastics (PET)', Recycled: 8.2, Landfill: 0.9 },
-    { category: 'Alu Cans', Recycled: 6.5, Landfill: 0.1 },
-    { category: 'Paper/Card', Recycled: 3.1, Landfill: 2.4 },
-  ];
-
-  const predictiveAlerts = [
-    { id: 'pa-1', title: '🚨 GATE C CROWD DENSITY PEAK', desc: 'Predictive flows indicate queue times at Gate C will exceed 24 mins by 20:45. Recommendation: Broadcast alternate route advisories to Fan portals.', time: '2m ago', severity: 'high' },
-    { id: 'pa-2', title: '⚡ LOT SILVER EV OVERLOAD', desc: 'EV charging stations drawing high grid power load (85kW). Activating solar backer grids.', time: '12m ago', severity: 'moderate' },
-    { id: 'pa-3', title: '♿ LIFT MOTOR TEMPERATURE WARN', desc: 'West elevator lift motor thermal sensors at 78C. Dispatching engineering tech team.', time: '18m ago', severity: 'low' },
-  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -145,7 +145,7 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
           </h4>
           <div style={{ flex: 1, fontSize: '0.68rem', opacity: 0.9 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sustainabilityData}>
+              <BarChart data={SUSTAINABILITY_DATA}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
                 <XAxis dataKey="category" stroke="var(--text-secondary)" tick={{ fontSize: '8px', fill: 'var(--text-secondary)', fontWeight: 600 }} />
                 <YAxis stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontWeight: 600 }} />
@@ -179,7 +179,7 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: '180px' }}>
-            {predictiveAlerts.map(alert => (
+            {PREDICTIVE_ALERTS.map(alert => (
               <div 
                 key={alert.id}
                 style={{

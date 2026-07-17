@@ -242,7 +242,7 @@ export function generateLocalResponse(
     case 'ops':
       return `🚨 **Operational Response**: Safety is our priority. If you see a hazard (spill, electrical issue, path block) or require medical aid, please log it immediately under the **Staff Portal** or alert any staff member. Standard first-aid stations are located near Gate A and Gate C.`;
     default:
-      return `👋 **Welcome to SUTRA!** I am the Stadium Unified Tournament Response Assistant for the FIFA World Cup 2026. \n\nI can help you with:\n- 📍 **Navigation & Wayfinding** (finding seats, concessions, gates)\n- 🚌 **Transit & Green Transport** (live metro/shuttle updates, eco-routes)\n- ♿ **Accessibility Accommodations** (elevators, sensory quiet rooms, listening devices)\n- 🌱 **Sustainability Programs** (recycling, carbon offsets, water stations)\n- 🚨 **Incident Dispatch** (staff reporting, crowd triage)\n\nWhat can I assist you with today?`;
+      return `👋 Welcome to SUTRA! I am your Stadium Unified Tournament Response Assistant.\n\nAsk me anything about Gate entry, vegan food, transport schedules, accessibility lifts, or sensory rooms!`;
   }
 }
 
