@@ -1,38 +1,13 @@
-// Azure Function API Handler - Secure GenAI Proxy
+// Secure GenAI Proxy - Hybrid Handler supporting both Azure Functions & Vercel Serverless runtimes
 
-module.exports = async function (context, req) {
-  context.log('SUTRA Chat Proxy processed a request.');
+// Retrieve environment variables
+const AZURE_OPENAI_KEY = process.env.AZURE_OPENAI_KEY;
+const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
+const AZURE_OPENAI_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4o";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-  // Handle options check or missing body
-  if (req.method === "OPTIONS") {
-    context.res = {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    };
-    return;
-  }
-
-  const { query, history, persona, ragContext } = req.body || {};
-
-  if (!query) {
-    context.res = {
-      status: 400,
-      body: { error: "Please provide a 'query' in the request body." }
-    };
-    return;
-  }
-
-  // Retrieve environment variables securely set in Azure
-  const AZURE_OPENAI_KEY = process.env.AZURE_OPENAI_KEY;
-  const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
-  const AZURE_OPENAI_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4o";
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
+async function executeChatLogic(query, persona, history, ragContext, logHelper) {
   const apiErrors = [];
 
   const systemPrompt = `You are SUTRA, the Stadium Unified Tournament Response Assistant for the FIFA World Cup 2026.
@@ -51,7 +26,6 @@ Guidelines:
   // 1. Try Azure OpenAI if configured
   if (AZURE_OPENAI_KEY && AZURE_OPENAI_ENDPOINT) {
     try {
-      // Clean trailing slash from endpoint if present
       const cleanEndpoint = AZURE_OPENAI_ENDPOINT.endsWith('/') 
         ? AZURE_OPENAI_ENDPOINT.slice(0, -1) 
         : AZURE_OPENAI_ENDPOINT;
@@ -79,20 +53,14 @@ Guidelines:
 
       if (response.ok) {
         const data = await response.json();
-        const reply = data.choices[0].message.content;
-        context.res = {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: { reply }
-        };
-        return;
+        return data.choices[0].message.content;
       } else {
         const errText = await response.text();
-        context.log.error("Azure OpenAI API Error: " + errText);
+        logHelper.error("Azure OpenAI API Error: " + errText);
         apiErrors.push(`Azure OpenAI error (Status ${response.status}): ${errText}`);
       }
     } catch (err) {
-      context.log.error("Azure OpenAI Connection Error: " + err.message);
+      logHelper.error("Azure OpenAI Connection Error: " + err.message);
       apiErrors.push(`Azure OpenAI Connection error: ${err.message}`);
     }
   }
@@ -124,20 +92,14 @@ Guidelines:
 
       if (response.ok) {
         const data = await response.json();
-        const reply = data.choices[0].message.content;
-        context.res = {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: { reply }
-        };
-        return;
+        return data.choices[0].message.content;
       } else {
         const errText = await response.text();
-        context.log.error("Standard OpenAI API Error: " + errText);
+        logHelper.error("Standard OpenAI API Error: " + errText);
         apiErrors.push(`Standard OpenAI error (Status ${response.status}): ${errText}`);
       }
     } catch (err) {
-      context.log.error("Standard OpenAI Connection Error: " + err.message);
+      logHelper.error("Standard OpenAI Connection Error: " + err.message);
       apiErrors.push(`Standard OpenAI Connection error: ${err.message}`);
     }
   }
@@ -196,38 +158,144 @@ Guidelines:
 
         if (response.ok) {
           const data = await response.json();
-          const reply = data.candidates[0].content.parts[0].text;
-          context.res = {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-            body: { reply }
-          };
-          return;
+          return data.candidates[0].content.parts[0].text;
         } else {
           const errText = await response.text();
-          context.log.warn(`Gemini model ${modelName} returned status ${response.status}: ${errText}`);
+          logHelper.warn(`Gemini model ${modelName} returned status ${response.status}: ${errText}`);
           apiErrors.push(`Gemini ${modelName} error (Status ${response.status}): ${errText}`);
         }
       } catch (err) {
-        context.log.error(`Gemini model ${modelName} Connection Error: ${err.message}`);
+        logHelper.error(`Gemini model ${modelName} Connection Error: ${err.message}`);
         apiErrors.push(`Gemini ${modelName} connection error: ${err.message}`);
       }
     }
   }
 
   // 3. Fallback: Simulated High-Fidelity Local AI Agent (if offline/unconfigured)
-  context.log('No valid API keys set or connection failed. Resolving request via Local Simulation.');
+  logHelper.log('No valid API keys set or connection failed. Resolving request via Local Simulation.');
   
   const azureKeyStatus = AZURE_OPENAI_KEY ? `Configured (Length: ${AZURE_OPENAI_KEY.length})` : "Missing";
   const azureEndpointStatus = AZURE_OPENAI_ENDPOINT ? "Configured" : "Missing";
-  const geminiKeyStatus = GEMINI_API_KEY ? `Configured (Length: ${GEMINI_API_KEY.length})` : "Missing";
-  const openaiKeyStatus = OPENAI_API_KEY ? `Configured (Length: ${OPENAI_API_KEY.length})` : "Missing";
+  const geminiKeyStatus = GEMINI_API_KEY ? `Configured (Length: ${geminiKeyStatus ? geminiKeyStatus.length : 0})` : "Missing";
+  const openaiKeyStatus = OPENAI_API_KEY ? `Configured (Length: ${openaiKeyStatus ? openaiKeyStatus.length : 0})` : "Missing";
 
-  context.res = {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-    body: {
-      reply: `☁️ **Azure Function Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check that your deployment name, endpoints, or key strings are correct inside the Azure Static Web App portal configuration.`
+  return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check that your deployment name, endpoints, or key strings are correct inside your portal configuration.`;
+}
+
+module.exports = async function (arg1, arg2) {
+  // Detect if running under Azure Functions (where arg1 is context) or Vercel/Express (where arg1 is req)
+  const isAzure = arg1 && typeof arg1.log === 'function' && arg1.res !== undefined;
+
+  if (isAzure) {
+    // ----------------------------------------------------
+    // Azure Functions Programming Model
+    // ----------------------------------------------------
+    const context = arg1;
+    const req = arg2;
+
+    if (req.method === "OPTIONS") {
+      context.res = {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
+      };
+      return;
     }
-  };
+
+    try {
+      const { query, history, persona, ragContext } = req.body || {};
+
+      if (!query) {
+        context.res = {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json"
+          },
+          body: { error: "Query is required" }
+        };
+        return;
+      }
+
+      const logHelper = {
+        log: (msg) => context.log(msg),
+        warn: (msg) => (context.log.warn ? context.log.warn(msg) : context.log(msg)),
+        error: (msg) => (context.log.error ? context.log.error(msg) : context.log(msg))
+      };
+
+      const reply = await executeChatLogic(query, persona, history, ragContext, logHelper);
+      
+      context.res = {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        },
+        body: { reply }
+      };
+    } catch (err) {
+      context.res = {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        },
+        body: { error: err.message }
+      };
+    }
+  } else {
+    // ----------------------------------------------------
+    // Vercel Serverless Function Programming Model
+    // ----------------------------------------------------
+    const req = arg1;
+    const res = arg2;
+
+    const origin = req.headers?.origin || '*';
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(200, {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      });
+      res.end();
+      return;
+    }
+
+    try {
+      const { query, history, persona, ragContext } = req.body || {};
+
+      if (!query) {
+        res.writeHead(400, {
+          "Access-Control-Allow-Origin": origin,
+          "Content-Type": "application/json"
+        });
+        res.end(JSON.stringify({ error: "Query is required" }));
+        return;
+      }
+
+      const logHelper = {
+        log: console.log,
+        warn: console.warn,
+        error: console.error
+      };
+
+      const reply = await executeChatLogic(query, persona, history, ragContext, logHelper);
+      
+      res.writeHead(200, {
+        "Access-Control-Allow-Origin": origin,
+        "Content-Type": "application/json"
+      });
+      res.end(JSON.stringify({ reply }));
+    } catch (err) {
+      res.writeHead(500, {
+        "Access-Control-Allow-Origin": origin,
+        "Content-Type": "application/json"
+      });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+  }
 };
