@@ -144,66 +144,74 @@ Guidelines:
 
   // 2. Try Google Gemini if configured
   if (GEMINI_API_KEY) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-      
-      const contents = [];
-      const systemInstructionText = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\n---`;
+    const modelsToTry = [
+      process.env.GEMINI_MODEL,
+      "gemini-3.1-flash-lite",
+      "gemini-3.5-flash"
+    ].filter(Boolean);
 
-      if (history && history.length > 0) {
-        history.forEach((h, index) => {
-          if (index === 0) {
-            contents.push({
-              role: h.role === 'user' ? 'user' : 'model',
-              parts: [{ text: `${systemInstructionText}\n\nUser Query: ${h.content}` }]
-            });
-          } else {
-            contents.push({
-              role: h.role === 'user' ? 'user' : 'model',
-              parts: [{ text: h.content }]
-            });
-          }
-        });
-        contents.push({
-          role: 'user',
-          parts: [{ text: query }]
-        });
-      } else {
-        contents.push({
-          role: 'user',
-          parts: [{ text: `${systemInstructionText}\n\nUser Query: ${query}` }]
-        });
-      }
+    for (const modelName of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+        
+        const contents = [];
+        const systemInstructionText = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\n---`;
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800
-          }
-        })
-      });
+        if (history && history.length > 0) {
+          history.forEach((h, index) => {
+            if (index === 0) {
+              contents.push({
+                role: h.role === 'user' ? 'user' : 'model',
+                parts: [{ text: `${systemInstructionText}\n\nUser Query: ${h.content}` }]
+              });
+            } else {
+              contents.push({
+                role: h.role === 'user' ? 'user' : 'model',
+                parts: [{ text: h.content }]
+              });
+            }
+          });
+          contents.push({
+            role: 'user',
+            parts: [{ text: query }]
+          });
+        } else {
+          contents.push({
+            role: 'user',
+            parts: [{ text: `${systemInstructionText}\n\nUser Query: ${query}` }]
+          });
+        }
 
-      if (response.ok) {
-        const data = await response.json();
-        const reply = data.candidates[0].content.parts[0].text;
-        context.res = {
-          status: 200,
+        const response = await fetch(url, {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: { reply }
-        };
-        return;
-      } else {
-        const errText = await response.text();
-        context.log.error("Gemini API Error: " + errText);
-        apiErrors.push(`Gemini error (Status ${response.status}): ${errText}`);
+          body: JSON.stringify({
+            contents: contents,
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 800
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const reply = data.candidates[0].content.parts[0].text;
+          context.res = {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+            body: { reply }
+          };
+          return;
+        } else {
+          const errText = await response.text();
+          context.log.warn(`Gemini model ${modelName} returned status ${response.status}: ${errText}`);
+          apiErrors.push(`Gemini ${modelName} error (Status ${response.status}): ${errText}`);
+        }
+      } catch (err) {
+        context.log.error(`Gemini model ${modelName} Connection Error: ${err.message}`);
+        apiErrors.push(`Gemini ${modelName} connection error: ${err.message}`);
       }
-    } catch (err) {
-      context.log.error("Gemini Connection Error: " + err.message);
-      apiErrors.push(`Gemini Connection error: ${err.message}`);
     }
   }
 
