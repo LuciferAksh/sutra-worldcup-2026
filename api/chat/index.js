@@ -147,29 +147,39 @@ Guidelines:
     try {
       const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       
-      // Format history for Gemini
       const contents = [];
+      const systemInstructionText = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\n---`;
+
       if (history && history.length > 0) {
-        history.forEach(h => {
-          contents.push({
-            role: h.role === 'user' ? 'user' : 'model',
-            parts: [{ text: h.content }]
-          });
+        history.forEach((h, index) => {
+          if (index === 0) {
+            contents.push({
+              role: h.role === 'user' ? 'user' : 'model',
+              parts: [{ text: `${systemInstructionText}\n\nUser Query: ${h.content}` }]
+            });
+          } else {
+            contents.push({
+              role: h.role === 'user' ? 'user' : 'model',
+              parts: [{ text: h.content }]
+            });
+          }
+        });
+        contents.push({
+          role: 'user',
+          parts: [{ text: query }]
+        });
+      } else {
+        contents.push({
+          role: 'user',
+          parts: [{ text: `${systemInstructionText}\n\nUser Query: ${query}` }]
         });
       }
-      contents.push({
-        role: 'user',
-        parts: [{ text: query }]
-      });
 
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: contents,
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 800
