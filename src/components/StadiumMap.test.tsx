@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { StadiumMap } from './StadiumMap';
 
 describe('StadiumMap Component', () => {
@@ -38,5 +38,25 @@ describe('StadiumMap Component', () => {
     expect(screen.getByText('GATEWAYS')).toBeDefined();
     expect(screen.getByText('ECO EATS')).toBeDefined();
     expect(screen.getByText('FIRST AID')).toBeDefined();
+  });
+
+  it('triggers onSelectFeature when a gateway feature label is clicked', () => {
+    render(
+      <StadiumMap 
+        mode="wayfinding"
+        selectedFeatureId={null}
+        onSelectFeature={mockOnSelect}
+        incidents={[]}
+        accessibilityOnly={false}
+        waypointStart="gate-a"
+        waypointEnd="sec-102"
+      />
+    );
+    
+    const gateText = screen.getByText('GATE A');
+    expect(gateText).toBeDefined();
+    
+    fireEvent.click(gateText);
+    expect(mockOnSelect).toHaveBeenCalled();
   });
 });

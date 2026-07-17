@@ -40,6 +40,8 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
   const [ecoPoints, setEcoPoints] = useState(150);
   const [ecoActionsLogged, setEcoActionsLogged] = useState<string[]>(['Used electric bus shuttle (+50 pts)']);
   const [ecoUnlocked, setEcoUnlocked] = useState(false);
+  const [calcDistance, setCalcDistance] = useState<string>('15');
+  const [calcMode, setCalcMode] = useState<'train' | 'bus' | 'carpool'>('train');
   
   // Language State
   const [language, setLanguage] = useState<'EN' | 'ES' | 'FR'>('EN');
@@ -88,7 +90,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
       timestamp: new Date()
     };
     
-    setMessages(prev => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg].slice(-20));
     setInputValue('');
     setIsTyping(true);
 
@@ -96,10 +98,10 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
     
     setIsTyping(false);
     setMessages(prev => [...prev, {
-      role: 'assistant',
+      role: 'assistant' as const,
       content: botReply,
       timestamp: new Date()
-    }]);
+    }].slice(-20));
   };
 
   // Toggle voice recognition
@@ -135,7 +137,20 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
     setEcoPoints(prev => prev + points);
     setEcoActionsLogged(prev => [`Logged: ${action} (+${points} pts)`, ...prev].slice(0, 2));
     setEcoUnlocked(true);
-    setTimeout(() => setEcoUnlocked(false), 2000);
+    
+    // Safety check: clean up previous timer if it exists to avoid leak
+    const timer = setTimeout(() => setEcoUnlocked(false), 2000);
+    return () => clearTimeout(timer);
+  };
+
+  const handleCalculateOffset = () => {
+    const dist = parseFloat(calcDistance) || 0;
+    if (dist <= 0) return;
+    let factor = 0.1;
+    if (calcMode === 'bus') factor = 0.08;
+    if (calcMode === 'carpool') factor = 0.12;
+    const co2Saved = Math.round(dist * factor * 10) / 10;
+    handleLogEcoAction(`Offset ${co2Saved}kg CO2 via ${calcMode.toUpperCase()}`, Math.max(10, Math.round(co2Saved * 10)));
   };
 
   const translations = {
@@ -290,14 +305,42 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
               </svg>
               <div style={{ position: 'absolute', fontSize: '0.9rem', fontWeight: 900, fontFamily: 'Outfit' }}>{ecoPoints}</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Unlock zero-waste tickets:</div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={() => handleLogEcoAction('Water Refill', 25)} className="selector-chip active-green" style={{ padding: '4px 8px', fontSize: '0.65rem' }}>+ REFILL</button>
-                <button onClick={() => handleLogEcoAction('Recycled Cup', 30)} className="selector-chip active-green" style={{ padding: '4px 8px', fontSize: '0.65rem' }}>+ SORT</button>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700 }}>CO2 TRAVEL OFFSET CALCULATOR:</div>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <input 
+                  type="number" 
+                  value={calcDistance} 
+                  onChange={(e) => setCalcDistance(e.target.value)}
+                  style={{ width: '42px', padding: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', fontSize: '0.68rem', outline: 'none' }}
+                  placeholder="km"
+                />
+                <select
+                  value={calcMode}
+                  onChange={(e) => setCalcMode(e.target.value as any)}
+                  style={{ flex: 1, padding: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', fontSize: '0.68rem', outline: 'none' }}
+                >
+                  <option value="train">🚇 Train (100g/km)</option>
+                  <option value="bus">🚌 Bus (80g/km)</option>
+                  <option value="carpool">🚗 Carpool (120g/km)</option>
+                </select>
+                <button 
+                  onClick={handleCalculateOffset} 
+                  className="selector-chip active-green" 
+                  style={{ padding: '4px 8px', fontSize: '0.62rem', borderStyle: 'solid' }}
+                >
+                  LOG
+                </button>
               </div>
+              
+              {/* Quick Actions */}
+              <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+                <button onClick={() => handleLogEcoAction('Water Refill', 25)} className="selector-chip active-green" style={{ padding: '3px 6px', fontSize: '0.6rem' }}>+ REFILL</button>
+                <button onClick={() => handleLogEcoAction('Recycled Cup', 30)} className="selector-chip active-green" style={{ padding: '3px 6px', fontSize: '0.6rem' }}>+ SORT</button>
+              </div>
+
               {/* Logged List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px', fontSize: '0.6rem', color: 'var(--fifa-green)', fontWeight: 700 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px', fontSize: '0.58rem', color: 'var(--fifa-green)', fontWeight: 700 }}>
                 {ecoActionsLogged.map((act, i) => <div key={i}>{act}</div>)}
               </div>
             </div>

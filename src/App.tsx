@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FanCompanion } from './components/FanCompanion';
 import { StaffDashboard } from './components/StaffDashboard';
-import { ControlTower } from './components/ControlTower';
 import { StadiumMap } from './components/StadiumMap';
 import type { MapFeature, IncidentMarker } from './components/StadiumMap';
 import { Sparkles, User, Settings, Layers, UserCheck } from 'lucide-react';
+
+const ControlTower = lazy(() => import('./components/ControlTower').then(module => ({ default: module.ControlTower })));
 
 export default function App() {
   const [activePersona, setActivePersona] = useState<'fan' | 'staff' | 'organizer'>('fan');
@@ -297,16 +298,18 @@ export default function App() {
                 transition={{ duration: 0.2 }}
                 style={{ display: 'flex', flexDirection: 'column' }}
               >
-                <ControlTower 
-                  incidents={incidents}
-                  onTriggerRandomIncident={handleTriggerRandomIncident}
-                  crowdMultiplier={crowdMultiplier}
-                  setCrowdMultiplier={setCrowdMultiplier}
-                  onSelectIncident={(inc) => {
-                    setSelectedIncident(inc);
-                    setActivePersona('staff'); // Switch back to staff to display incident workspace details
-                  }}
-                />
+                <Suspense fallback={<div className="glass-panel" style={{ padding: '24px', color: 'var(--text-secondary)', textAlign: 'center', fontSize: '0.8rem' }}>Loading Control Tower Analytics...</div>}>
+                  <ControlTower 
+                    incidents={incidents}
+                    onTriggerRandomIncident={handleTriggerRandomIncident}
+                    crowdMultiplier={crowdMultiplier}
+                    setCrowdMultiplier={setCrowdMultiplier}
+                    onSelectIncident={(inc) => {
+                      setSelectedIncident(inc);
+                      setActivePersona('staff'); // Switch back to staff to display incident workspace details
+                    }}
+                  />
+                </Suspense>
               </motion.div>
             )}
 

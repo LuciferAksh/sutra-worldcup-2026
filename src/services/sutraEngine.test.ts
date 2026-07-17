@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { searchRAG, classifyQuery, generateLocalResponse } from './sutraEngine';
+import { describe, it, expect, vi } from 'vitest';
+import { searchRAG, classifyQuery, generateLocalResponse, sendQueryToSutraAgent } from './sutraEngine';
 
 describe('SUTRA AI Engine & RAG Retrieval', () => {
   
@@ -27,6 +27,23 @@ describe('SUTRA AI Engine & RAG Retrieval', () => {
     const response = generateLocalResponse('sensory room quiet zone', 'fan', results);
     expect(response).toContain('Sensory-Friendly Quiet Rooms');
     expect(response).toContain('Section 118');
+  });
+
+  it('should handle API fetch failures and fallback to local RAG with warning prefix', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(() => 
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        text: () => Promise.resolve('Internal Server Error')
+      })
+    ) as any;
+
+    const response = await sendQueryToSutraAgent('wheelchair accessibility elevators', [], 'fan');
+    expect(response).toContain('⚠️ **Local RAG Fallback**');
+    expect(response).toContain('API returned status 500');
+
+    global.fetch = originalFetch;
   });
   
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
@@ -65,6 +65,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredFeature, setHoveredFeature] = useState<MapFeature | null>(null);
+  const lastMoveRef = useRef(0);
 
   // High-fidelity sector shapes
   const SECTOR_SECTIONS = [
@@ -124,6 +125,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
+    const now = Date.now();
+    if (now - lastMoveRef.current < 16) return; // 60fps limit
+    lastMoveRef.current = now;
     setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 

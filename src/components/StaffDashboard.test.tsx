@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { StaffDashboard } from './StaffDashboard';
 
 describe('StaffDashboard Component', () => {
@@ -34,5 +34,47 @@ describe('StaffDashboard Component', () => {
     );
     
     expect(screen.getByText('NO INCIDENT FOCUS')).toBeDefined();
+  });
+
+  it('triggers onAddIncident when submitting new incident', () => {
+    render(
+      <StaffDashboard 
+        incidents={[]}
+        onAddIncident={mockOnAdd}
+        onUpdateIncidentStatus={mockOnUpdate}
+        selectedIncident={null}
+        onSelectIncident={mockOnSelect}
+      />
+    );
+    
+    const inputEl = screen.getByPlaceholderText('e.g. Water puddle on Section 112 steps');
+    fireEvent.change(inputEl, { target: { value: 'Water puddle near section 104' } });
+    
+    const submitBtn = screen.getByText('Broadcast Supervisor Alert');
+    fireEvent.click(submitBtn);
+    
+    expect(mockOnAdd).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Water puddle near section 104',
+      category: 'cleaning'
+    }));
+  });
+
+  it('displays incident details and triggers status updates when incident is focused', () => {
+    const mockIncident = { id: 'inc-99', title: 'Medical spill', category: 'medical' as const, x: 100, y: 100, status: 'pending' as const };
+    render(
+      <StaffDashboard 
+        incidents={[mockIncident]}
+        onAddIncident={mockOnAdd}
+        onUpdateIncidentStatus={mockOnUpdate}
+        selectedIncident={mockIncident}
+        onSelectIncident={mockOnSelect}
+      />
+    );
+    
+    expect(screen.getByText('SUTRA AI triage matrix', { exact: false })).toBeDefined();
+    
+    const dispatchBtn = screen.getByText('DISPATCH FIELD VOLUNTEER');
+    fireEvent.click(dispatchBtn);
+    expect(mockOnUpdate).toHaveBeenCalledWith('inc-99', 'dispatched');
   });
 });
