@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from 'react';
+import { useState, Suspense, lazy, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FanCompanion } from './components/FanCompanion';
 import { StaffDashboard } from './components/StaffDashboard';
@@ -42,14 +42,14 @@ export default function App() {
   const [provider, setProvider] = useState<'local' | 'azure-openai'>('azure-openai');
   const [savedSettings, setSavedSettings] = useState(true);
 
-  const logEvent = (msg: string) => {
+  const logEvent = useCallback((msg: string) => {
     const time = new Date().toLocaleTimeString();
     const entry: TestLogEntry = {
       id: `log-${Date.now()}-${Math.random()}`,
       text: `[${time}] ${msg}`
     };
     setTestLogs(prev => [entry, ...prev].slice(0, 15));
-  };
+  }, []);
 
   const runSimulatedTests = async () => {
     setIsRunningTests(true);
@@ -72,43 +72,42 @@ export default function App() {
     setIsRunningTests(false);
   };
 
-  const handleRouteSelect = (start: string, end: string) => {
+  const handleRouteSelect = useCallback((start: string, end: string) => {
     setRouteStart(start);
     setRouteEnd(end);
     logEvent(`Route updated: ${start.toUpperCase()} ➡️ ${end.toUpperCase()}`);
-  };
+  }, [logEvent]);
 
-  const handleSelectFeature = (feature: MapFeature | null) => {
+  const handleSelectFeature = useCallback((feature: MapFeature | null) => {
     setSelectedFeature(feature);
     if (feature) logEvent(`Map selection: ${feature.name}`);
-  };
+  }, [logEvent]);
 
-  const handleSelectIncident = (incident: IncidentMarker | null) => {
+  const handleSelectIncident = useCallback((incident: IncidentMarker | null) => {
     setSelectedIncident(incident);
     if (incident) logEvent(`Incident focus: "${incident.title}"`);
-  };
+  }, [logEvent]);
 
   // Dispatch action
-  const handleUpdateIncidentStatus = (id: string, status: 'pending' | 'dispatched' | 'resolved') => {
+  const handleUpdateIncidentStatus = useCallback((id: string, status: 'pending' | 'dispatched' | 'resolved') => {
     setIncidents(prev => prev.map(inc => inc.id === id ? { ...inc, status } : inc));
     setSelectedIncident(prev => prev && prev.id === id ? { ...prev, status } : prev);
     logEvent(`Incident status updated [${id}]: ${status.toUpperCase()}`);
-  };
+  }, [logEvent]);
 
   // Add incident reported by staff
-  const handleAddIncident = (newInc: Omit<IncidentMarker, 'id' | 'status'>) => {
+  const handleAddIncident = useCallback((newInc: Omit<IncidentMarker, 'id' | 'status'>) => {
     const fresh: IncidentMarker = {
       ...newInc,
       id: `inc-${Date.now()}`,
       status: 'pending'
     };
     setIncidents(prev => [fresh, ...prev]);
-    setSelectedIncident(fresh);
-    logEvent(`New Incident reported: "${newInc.title}"`);
-  };
+    logEvent(`Incident reported: "${newInc.title}"`);
+  }, [logEvent]);
 
   // Trigger random emergency incident simulation
-  const handleTriggerRandomIncident = () => {
+  const handleTriggerRandomIncident = useCallback(() => {
     const locations = [
       { name: 'Gate B Security lane congestion', cat: 'security', x: 530, y: 300 },
       { name: 'Power failure near concession stands', cat: 'technical', x: 440, y: 380 },
@@ -123,7 +122,7 @@ export default function App() {
       y: picked.y
     });
     logEvent(`Simulator random alert triggered.`);
-  };
+  }, [handleAddIncident, logEvent]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-primary)', overflow: 'hidden', position: 'relative' }}>
