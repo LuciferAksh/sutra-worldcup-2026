@@ -106,7 +106,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Category</span>
                 <select 
                   value={category} 
-                  onChange={(e) => setCategory(e.target.value as any)}
+                  onChange={(e) => setCategory(e.target.value as 'cleaning' | 'security' | 'medical' | 'technical')}
                   style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none' }}
                 >
                   <option value="cleaning">🧹 CLEANING / SPILL</option>

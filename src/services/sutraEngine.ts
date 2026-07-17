@@ -337,14 +337,19 @@ export function speakText(text: string) {
   window.speechSynthesis.speak(utterance);
 }
 
-// Speech to Text (STT) Recognition Handler
+interface ExtendedWindow extends Window {
+  SpeechRecognition?: any;
+  webkitSpeechRecognition?: any;
+}
+
 export function startVoiceRecognition(
   onTranscript: (text: string) => void,
   onEnd: () => void,
   onError: (err: any) => void
 ): any {
   // Check browser compatibility (WebkitSpeechRecognition)
-  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const SpeechRecognition = (window as unknown as ExtendedWindow).SpeechRecognition || 
+                            (window as unknown as ExtendedWindow).webkitSpeechRecognition;
   
   if (!SpeechRecognition) {
     onError("Web Speech API is not supported in this browser.");

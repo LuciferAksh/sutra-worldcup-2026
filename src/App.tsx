@@ -110,7 +110,7 @@ export default function App() {
     
     handleAddIncident({
       title: `🚨 SIM ALERT: ${picked.name}`,
-      category: picked.cat as any,
+      category: picked.cat as 'cleaning' | 'security' | 'medical' | 'technical',
       x: picked.x,
       y: picked.y
     });
@@ -155,7 +155,7 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActivePersona(tab.id as any);
+                  setActivePersona(tab.id as 'fan' | 'staff' | 'organizer');
                   logEvent(`Switched persona to: ${tab.id.toUpperCase()}`);
                 }}
                 style={{
@@ -364,7 +364,7 @@ export default function App() {
                   <span style={{ color: 'var(--text-secondary)' }}>AI Engine Provider</span>
                   <select 
                     value={provider} 
-                    onChange={(e) => setProvider(e.target.value as any)}
+                    onChange={(e) => setProvider(e.target.value as 'local' | 'azure-openai')}
                     style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', outline: 'none', marginTop: '4px' }}
                   >
                     <option value="azure-openai">☁️ Vercel Serverless API (Using Vercel Env variables)</option>

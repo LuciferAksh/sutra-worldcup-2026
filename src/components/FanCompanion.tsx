@@ -317,7 +317,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
                 />
                 <select
                   value={calcMode}
-                  onChange={(e) => setCalcMode(e.target.value as any)}
+                  onChange={(e) => setCalcMode(e.target.value as 'train' | 'bus' | 'carpool')}
                   style={{ flex: 1, padding: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', fontSize: '0.68rem', outline: 'none' }}
                 >
                   <option value="train">🚇 Train (100g/km)</option>
@@ -374,7 +374,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
               <Globe size={12} style={{ color: 'var(--neon-cyan)' }} />
               <select 
                 value={language} 
-                onChange={(e) => setLanguage(e.target.value as any)}
+                onChange={(e) => setLanguage(e.target.value as 'EN' | 'ES' | 'FR')}
                 style={{ background: 'none', border: 'none', color: '#fff', fontSize: '0.7rem', outline: 'none', cursor: 'pointer', fontWeight: 800 }}
               >
                 <option value="EN" style={{ background: 'var(--bg-primary)' }}>EN</option>

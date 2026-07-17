@@ -30,8 +30,8 @@ describe('SUTRA AI Engine & RAG Retrieval', () => {
   });
 
   it('should handle API fetch failures and fallback to local RAG with warning prefix', async () => {
-    const originalFetch = global.fetch;
-    global.fetch = vi.fn().mockImplementation(() => 
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockImplementation(() => 
       Promise.resolve({
         ok: false,
         status: 500,
@@ -43,7 +43,7 @@ describe('SUTRA AI Engine & RAG Retrieval', () => {
     expect(response).toContain('⚠️ **Local RAG Fallback**');
     expect(response).toContain('API returned status 500');
 
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
   });
   
 });
