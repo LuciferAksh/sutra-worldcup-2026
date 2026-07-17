@@ -94,6 +94,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Hazard Description</span>
               <input 
                 type="text" 
+                aria-label="Incident Description"
                 placeholder="e.g. Water puddle on Section 112 steps" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -105,6 +106,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               <div>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Category</span>
                 <select 
+                  aria-label="Incident Category"
                   value={category} 
                   onChange={(e) => setCategory(e.target.value as 'cleaning' | 'security' | 'medical' | 'technical')}
                   style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none' }}
@@ -119,6 +121,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               <div>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Target Zone</span>
                 <select 
+                  aria-label="Incident Location Zone"
                   value={locationId} 
                   onChange={(e) => setLocationId(e.target.value)}
                   style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none' }}
@@ -151,6 +154,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Convert Fan Query</span>
               <select 
+                aria-label="Target Translation Language"
                 value={translateTarget} 
                 onChange={(e) => setTranslateTarget(e.target.value)}
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', padding: '2px 6px', fontSize: '0.65rem', fontWeight: 700 }}
@@ -162,6 +166,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
             <input 
               type="text" 
+              aria-label="Translation query input"
               placeholder="e.g. where is the nearest medical station?" 
               value={translateQuery}
               onChange={(e) => setTranslateQuery(e.target.value)}

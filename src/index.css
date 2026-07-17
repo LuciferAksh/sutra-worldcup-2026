@@ -447,3 +447,34 @@ body {
   transform: scale(1.02);
 }
 
+/* Utility Classes to eliminate inline style overhead */
+.util-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+.util-flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.util-w-full {
+  width: 100%;
+}
+.util-h-full {
+  height: 100%;
+}
+.util-cursor-pointer {
+  cursor: pointer;
+}
+.util-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(7, 10, 17, 0.7);
+  backdrop-filter: blur(8px);
+}
+

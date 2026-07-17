@@ -5,6 +5,9 @@ import { StaffDashboard } from './components/StaffDashboard';
 import { StadiumMap } from './components/StadiumMap';
 import type { MapFeature, IncidentMarker } from './components/StadiumMap';
 import { Sparkles, User, Settings, Layers, UserCheck } from 'lucide-react';
+import { SettingsModal } from './components/SettingsModal';
+import { TestConsole } from './components/TestConsole';
+import type { TestLogEntry } from './components/TestConsole';
 
 const ControlTower = lazy(() => import('./components/ControlTower').then(module => ({ default: module.ControlTower })));
 
@@ -30,8 +33,9 @@ export default function App() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showTestConsole, setShowTestConsole] = useState(false);
   const [isRunningTests, setIsRunningTests] = useState(false);
-  const [testLogs, setTestLogs] = useState<string[]>([
-    "[System] SUTRA telemetry online. Press 'Run Automated Tests' to validate RAG index."
+  
+  const [testLogs, setTestLogs] = useState<TestLogEntry[]>([
+    { id: 'log-init', text: "[System] SUTRA telemetry online. Press 'Run Automated Tests' to validate RAG index." }
   ]);
   
   // API settings state
@@ -40,12 +44,16 @@ export default function App() {
 
   const logEvent = (msg: string) => {
     const time = new Date().toLocaleTimeString();
-    setTestLogs(prev => [`[${time}] ${msg}`, ...prev].slice(0, 15));
+    const entry: TestLogEntry = {
+      id: `log-${Date.now()}-${Math.random()}`,
+      text: `[${time}] ${msg}`
+    };
+    setTestLogs(prev => [entry, ...prev].slice(0, 15));
   };
 
   const runSimulatedTests = async () => {
     setIsRunningTests(true);
-    setTestLogs([`[Running] Initializing SUTRA test harness...`]);
+    setTestLogs([{ id: `log-${Date.now()}-run`, text: `[Running] Initializing SUTRA test harness...` }]);
     
     const steps = [
       { text: `Testing Local RAG Index search...`, log: `[PASS] Keyword 'wheelchair' resolved 100% matching wheelchair rows & elevators.` },
@@ -57,9 +65,9 @@ export default function App() {
 
     for (let i = 0; i < steps.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 600));
-      setTestLogs(prev => [`[Running] ${steps[i].text}`, ...prev]);
+      setTestLogs(prev => [{ id: `log-${Date.now()}-${i}-text`, text: `[Running] ${steps[i].text}` }, ...prev]);
       await new Promise(resolve => setTimeout(resolve, 400));
-      setTestLogs(prev => [`${steps[i].log || '[Success] ' + steps[i].text}`, ...prev]);
+      setTestLogs(prev => [{ id: `log-${Date.now()}-${i}-log`, text: `${steps[i].log || '[Success] ' + steps[i].text}` }, ...prev]);
     }
     setIsRunningTests(false);
   };
@@ -338,196 +346,30 @@ export default function App() {
 
       {/* Floating Settings configuration modal */}
       <AnimatePresence>
-        {showConfigModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(7, 10, 17, 0.7)', backdropFilter: 'blur(8px)' }}>
-            
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-panel"
-              style={{ width: '100%', maxWidth: '420px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid var(--border-glow)', boxShadow: '0 0 30px rgba(0, 240, 255, 0.15)' }}
-            >
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'Outfit', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Settings size={18} style={{ color: 'var(--neon-cyan)' }} />
-                  SUTRA AI Engine Config
-                </h3>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
-                  Configure your server-side OpenAI credentials.
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.75rem' }}>
-                
-                <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>AI Engine Provider</span>
-                  <select 
-                    value={provider} 
-                    onChange={(e) => setProvider(e.target.value as 'local' | 'azure-openai')}
-                    style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', outline: 'none', marginTop: '4px' }}
-                  >
-                    <option value="azure-openai">☁️ Vercel Serverless API (Using Vercel Env variables)</option>
-                    <option value="local">🤖 Local RAG fallback (Offline Simulation)</option>
-                  </select>
-                </div>
-
-                {provider === 'azure-openai' ? (
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' }}>
-                    🔒 **Server-Side Credentials Active**:<br />
-                    SUTRA will query the serverless Vercel function `/api/chat` using the keys securely configured in your Vercel Dashboard. No keys are required in the client browser.
-                  </div>
-                ) : (
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' }}>
-                    🤖 **Offline Simulation Fallback**:<br />
-                    SUTRA will resolve queries instantly inside the browser using the local client-side RAG index.
-                  </div>
-                )}
-
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <button 
-                  onClick={() => {
-                    setSavedSettings(true);
-                    setShowConfigModal(false);
-                    logEvent(`Provider updated: ${provider.toUpperCase()}`);
-                  }}
-                  className="btn-neon" 
-                  style={{ flex: 1, justifyContent: 'center', padding: '8px 16px', fontSize: '0.8rem' }}
-                >
-                  Save Configuration
-                </button>
-                <button 
-                  onClick={() => setShowConfigModal(false)}
-                  className="btn-secondary" 
-                  style={{ padding: '8px 16px', fontSize: '0.8rem' }}
-                >
-                  Cancel
-                </button>
-              </div>
-
-            </motion.div>
-
-          </div>
-        )}
+        <SettingsModal 
+          show={showConfigModal}
+          onClose={() => setShowConfigModal(false)}
+          provider={provider}
+          setProvider={setProvider}
+          onSave={() => {
+            setSavedSettings(true);
+            setShowConfigModal(false);
+            logEvent(`Provider updated: ${provider.toUpperCase()}`);
+          }}
+        />
       </AnimatePresence>
 
       {/* SUTRA Test & Telemetry Console Drawer */}
       <AnimatePresence>
-        {showTestConsole && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(7, 10, 17, 0.7)', backdropFilter: 'blur(8px)' }}>
-            
-            <motion.div 
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="glass-panel"
-              style={{ width: '100%', maxWidth: '600px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid var(--border-glow)', boxShadow: '0 0 35px rgba(0, 240, 255, 0.2)', maxHeight: '90vh', overflowY: 'auto' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'Outfit', color: 'var(--neon-cyan)', letterSpacing: '0.5px' }}>
-                    🧪 SUTRA HARNESS & TELEMETRY
-                  </h3>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                    Visual sandbox to validate GenAI routing, RAG databases, and dispatches.
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setShowTestConsole(false)}
-                  className="btn-secondary" 
-                  style={{ padding: '6px 12px', fontSize: '0.7rem' }}
-                >
-                  Close Console
-                </button>
-              </div>
-
-              {/* Console operations */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                
-                {/* Actions list */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#fff' }}>HARNESS CONTROLS</div>
-                  
-                  <button 
-                    onClick={runSimulatedTests} 
-                    disabled={isRunningTests}
-                    className="btn-neon" 
-                    style={{ fontSize: '0.72rem', padding: '10px 14px', width: '100%', justifyContent: 'center' }}
-                  >
-                    {isRunningTests ? 'Executing tests...' : 'Run Integration Suite'}
-                  </button>
-
-                  <button 
-                    onClick={handleTriggerRandomIncident}
-                    className="btn-secondary" 
-                    style={{ fontSize: '0.72rem', padding: '10px 14px', width: '100%' }}
-                  >
-                    Simulate Incident Trigger
-                  </button>
-
-                  <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-muted)', padding: '12px', borderRadius: '10px', fontSize: '0.7rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                    <strong>Harness stats:</strong><br />
-                    • Environment: Local JSDOM / Browser<br />
-                    • Telemetry buffer: 15 entries max<br />
-                    • State sync: Verified active
-                  </div>
-
-                </div>
-
-                {/* Log terminal */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>REAL-TIME TELEMETRY FEED</span>
-                    <button 
-                      onClick={() => setTestLogs([])}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.65rem', cursor: 'pointer' }}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                  
-                  <div 
-                    style={{ 
-                      flex: 1, 
-                      minHeight: '200px', 
-                      background: '#04070c', 
-                      border: '1px solid rgba(0, 240, 255, 0.1)', 
-                      borderRadius: '8px', 
-                      padding: '12px', 
-                      fontFamily: 'monospace', 
-                      fontSize: '0.68rem', 
-                      color: '#00ffaa', 
-                      overflowY: 'auto',
-                      maxHeight: '220px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px'
-                    }}
-                  >
-                    {testLogs.map((log, i) => (
-                      <div 
-                        key={i} 
-                        style={{ 
-                          color: log.includes('[PASS]') || log.includes('validated') ? '#00ffaa' : 
-                                 log.includes('[Running]') || log.includes('[Test]') ? 'var(--neon-cyan)' :
-                                 log.includes('[System]') ? 'var(--warning-amber)' : '#94a3b8'
-                        }}
-                      >
-                        {log}
-                      </div>
-                    ))}
-                  </div>
-
-                </div>
-
-              </div>
-
-            </motion.div>
-
-          </div>
-        )}
+        <TestConsole 
+          show={showTestConsole}
+          onClose={() => setShowTestConsole(false)}
+          runSimulatedTests={runSimulatedTests}
+          isRunningTests={isRunningTests}
+          handleTriggerRandomIncident={handleTriggerRandomIncident}
+          testLogs={testLogs}
+          clearLogs={() => setTestLogs([])}
+        />
       </AnimatePresence>
 
     </div>

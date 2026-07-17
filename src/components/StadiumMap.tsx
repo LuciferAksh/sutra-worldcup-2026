@@ -262,13 +262,12 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
                     fill={sector.color}
                     stroke={sector.stroke}
                     strokeWidth="1.5"
-                    className="heatmap-pulse"
+                    className="heatmap-pulse util-cursor-pointer"
                     initial={{ fillOpacity: 0, strokeOpacity: 0 }}
                     animate={{ fillOpacity: 0.3, strokeOpacity: 0.8 }}
                     whileHover={{ fillOpacity: 0.55, strokeWidth: 3.5, filter: 'brightness(1.2)' }}
                     exit={{ fillOpacity: 0, strokeOpacity: 0 }}
                     transition={{ duration: 0.25 }}
-                    style={{ cursor: 'pointer' }}
                     onClick={() => onSelectFeature({
                       id: sector.id,
                       name: sector.name,
@@ -363,7 +362,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
               <g 
                 key={feature.id} 
                 transform={`translate(${feature.x}, ${feature.y})`}
-                style={{ cursor: 'pointer' }}
+                className="util-cursor-pointer"
                 onClick={() => onSelectFeature(feature)}
                 onMouseEnter={() => setHoveredFeature(feature)}
                 onMouseLeave={() => setHoveredFeature(null)}
@@ -427,7 +426,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 350, damping: 18 }}
                   transform={`translate(${incident.x}, ${incident.y})`}
-                  style={{ cursor: 'pointer' }}
+                  className="util-cursor-pointer"
                   onClick={() => onSelectIncident?.(incident)}
                 >
                   {/* Double concentric flashing hazard circles */}

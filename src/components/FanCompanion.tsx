@@ -316,6 +316,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
                   placeholder="km"
                 />
                 <select
+                  aria-label="Transport Mode Selection"
                   value={calcMode}
                   onChange={(e) => setCalcMode(e.target.value as 'train' | 'bus' | 'carpool')}
                   style={{ flex: 1, padding: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', fontSize: '0.68rem', outline: 'none' }}
@@ -341,7 +342,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
 
               {/* Logged List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px', fontSize: '0.58rem', color: 'var(--fifa-green)', fontWeight: 700 }}>
-                {ecoActionsLogged.map((act, i) => <div key={i}>{act}</div>)}
+                {ecoActionsLogged.map((act) => <div key={act}>{act}</div>)}
               </div>
             </div>
           </div>
@@ -373,6 +374,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.02)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>
               <Globe size={12} style={{ color: 'var(--neon-cyan)' }} />
               <select 
+                aria-label="Language Selector"
                 value={language} 
                 onChange={(e) => setLanguage(e.target.value as 'EN' | 'ES' | 'FR')}
                 style={{ background: 'none', border: 'none', color: '#fff', fontSize: '0.7rem', outline: 'none', cursor: 'pointer', fontWeight: 800 }}
@@ -391,7 +393,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
             const isUser = msg.role === 'user';
             return (
               <motion.div 
-                key={index} 
+                key={msg.timestamp.getTime() + '-' + index} 
                 initial={{ opacity: 0, y: 12, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -472,6 +474,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
 
           <input 
             type="text" 
+            aria-label="Ask SUTRA details"
             placeholder={isListening ? "Voice capture active..." : "Ask SUTRA details..."}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
