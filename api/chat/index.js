@@ -114,7 +114,7 @@ Guidelines:
 
     for (const modelName of modelsToTry) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent`;
         
         const contents = [];
         const systemInstructionText = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\n---`;
@@ -146,7 +146,10 @@ Guidelines:
 
         const response = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY
+          },
           body: JSON.stringify({
             contents: contents,
             generationConfig: {
@@ -174,21 +177,27 @@ Guidelines:
   // 3. Fallback: Simulated High-Fidelity Local AI Agent (if offline/unconfigured)
   logHelper.log('No valid API keys set or connection failed. Resolving request via Local Simulation.');
   
-  const azureKeyStatus = AZURE_OPENAI_KEY ? `Configured (Length: ${AZURE_OPENAI_KEY.length})` : "Missing";
+  const azureKeyStatus = AZURE_OPENAI_KEY ? "Configured" : "Missing";
   const azureEndpointStatus = AZURE_OPENAI_ENDPOINT ? "Configured" : "Missing";
-  const geminiKeyStatus = GEMINI_API_KEY ? `Configured (Length: ${GEMINI_API_KEY.length})` : "Missing";
-  const openaiKeyStatus = OPENAI_API_KEY ? `Configured (Length: ${OPENAI_API_KEY.length})` : "Missing";
+  const geminiKeyStatus = GEMINI_API_KEY ? "Configured" : "Missing";
+  const openaiKeyStatus = OPENAI_API_KEY ? "Configured" : "Missing";
 
-  return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check that your deployment name, endpoints, or key strings are correct inside your portal configuration.`;
+  return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check your Vercel Dashboard environment variable configuration.`;
 }
 
 export default async function handler(req, res) {
-  const origin = req.headers?.origin || '*';
+  const origin = req.headers?.origin || '';
+  const isAllowedOrigin = origin === '' || 
+                          origin.startsWith('http://localhost:') || 
+                          origin.startsWith('http://127.0.0.1:') || 
+                          origin.endsWith('.vercel.app') || 
+                          origin.endsWith('.azurestaticapps.net');
+  const allowOrigin = isAllowedOrigin ? origin : 'https://sutra-worldcup-2026.vercel.app';
 
   // Handle preflight options check
   if (req.method === "OPTIONS") {
     res.writeHead(200, {
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": allowOrigin,
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     });
@@ -206,16 +215,20 @@ export default async function handler(req, res) {
       }
     }
 
-    const { query, history, persona, ragContext } = body || {};
+    const { query, history, persona: rawPersona, ragContext } = body || {};
 
     if (!query) {
       res.writeHead(400, {
-        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Origin": allowOrigin,
         "Content-Type": "application/json"
       });
       res.end(JSON.stringify({ error: "Query is required" }));
       return;
     }
+
+    // Sanitize persona to prevent prompt injection
+    const VALID_PERSONAS = ['fan', 'staff', 'organizer'];
+    const persona = VALID_PERSONAS.includes(rawPersona) ? rawPersona : 'fan';
 
     const logHelper = {
       log: console.log,
@@ -226,13 +239,13 @@ export default async function handler(req, res) {
     const reply = await executeChatLogic(query, persona, history, ragContext, logHelper);
     
     res.writeHead(200, {
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": allowOrigin,
       "Content-Type": "application/json"
     });
     res.end(JSON.stringify({ reply }));
   } catch (err) {
     res.writeHead(500, {
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": allowOrigin,
       "Content-Type": "application/json"
     });
     res.end(JSON.stringify({ error: err.message }));

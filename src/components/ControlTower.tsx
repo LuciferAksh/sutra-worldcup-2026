@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from 'recharts';
 import { ShieldAlert, Cpu, Leaf, Users, ChevronRight, Activity } from 'lucide-react';
 import type { IncidentMarker } from './StadiumMap';
@@ -18,14 +18,14 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
   setCrowdMultiplier,
   onSelectIncident
 }) => {
-  const flowData = [
+  const flowData = useMemo(() => [
     { hour: '16:00', GateA: 1200 * crowdMultiplier, GateB: 800 * crowdMultiplier, GateC: 1500 * crowdMultiplier, GateD: 400 * crowdMultiplier },
     { hour: '17:00', GateA: 2400 * crowdMultiplier, GateB: 1600 * crowdMultiplier, GateC: 3100 * crowdMultiplier, GateD: 900 * crowdMultiplier },
     { hour: '18:00', GateA: 4800 * crowdMultiplier, GateB: 3500 * crowdMultiplier, GateC: 6200 * crowdMultiplier, GateD: 2100 * crowdMultiplier },
     { hour: '19:00', GateA: 8200 * crowdMultiplier, GateB: 7100 * crowdMultiplier, GateC: 9800 * crowdMultiplier, GateD: 4300 * crowdMultiplier },
     { hour: '20:00', GateA: 9500 * crowdMultiplier, GateB: 8400 * crowdMultiplier, GateC: 11200 * crowdMultiplier, GateD: 5900 * crowdMultiplier },
     { hour: '20:30 (Live)', GateA: 10400 * crowdMultiplier, GateB: 9200 * crowdMultiplier, GateC: 12500 * crowdMultiplier, GateD: 6400 * crowdMultiplier },
-  ];
+  ], [crowdMultiplier]);
 
   const sustainabilityData = [
     { category: 'Compost (Food)', Recycled: 4.8, Landfill: 0.2 },
@@ -34,11 +34,11 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
     { category: 'Paper/Card', Recycled: 3.1, Landfill: 2.4 },
   ];
 
-  const [predictiveAlerts] = useState([
+  const predictiveAlerts = [
     { id: 'pa-1', title: '🚨 GATE C CROWD DENSITY PEAK', desc: 'Predictive flows indicate queue times at Gate C will exceed 24 mins by 20:45. Recommendation: Broadcast alternate route advisories to Fan portals.', time: '2m ago', severity: 'high' },
     { id: 'pa-2', title: '⚡ LOT SILVER EV OVERLOAD', desc: 'EV charging stations drawing high grid power load (85kW). Activating solar backer grids.', time: '12m ago', severity: 'moderate' },
     { id: 'pa-3', title: '♿ LIFT MOTOR TEMPERATURE WARN', desc: 'West elevator lift motor thermal sensors at 78C. Dispatching engineering tech team.', time: '18m ago', severity: 'low' },
-  ]);
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -56,7 +56,7 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
             <span style={{ fontSize: '0.68rem', color: 'var(--fifa-green)', fontWeight: 800 }}>82% CAP</span>
           </div>
           <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '99px', overflow: 'hidden', marginTop: '4px' }}>
-            <div style={{ width: `${82 * crowdMultiplier}%`, height: '100%', background: 'var(--neon-cyan)', boxShadow: '0 0 8px var(--neon-cyan)' }}></div>
+            <div style={{ width: `${Math.min(82 * crowdMultiplier, 100)}%`, height: '100%', background: 'var(--neon-cyan)', boxShadow: '0 0 8px var(--neon-cyan)' }}></div>
           </div>
         </div>
 

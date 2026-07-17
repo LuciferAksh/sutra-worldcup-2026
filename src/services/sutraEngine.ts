@@ -158,16 +158,17 @@ export function searchRAG(query: string): RAGEntry[] {
   const matches = SUTRA_RAG_DATABASE.map(entry => {
     let score = 0;
     
-    // Keyword match
-    entry.keywords.forEach(keyword => {
+    // Keyword match (keywords are already lowercase in the database)
+    for (const keyword of entry.keywords) {
       if (normalized.includes(keyword)) {
         score += 5;
       }
-    });
+    }
 
-    // Title / content matches
-    if (entry.title.toLowerCase().includes(normalized)) score += 10;
-    if (entry.content.toLowerCase().includes(normalized)) score += 2;
+    // Title / content matches (compute lowercase only when needed)
+    const titleLower = entry.title.toLowerCase();
+    if (titleLower.includes(normalized)) score += 10;
+    if (score === 0 && entry.content.toLowerCase().includes(normalized)) score += 2;
     
     return { entry, score };
   });
@@ -245,7 +246,7 @@ export function generateLocalResponse(
   }
 }
 
-// Call Serverless API (Azure Function proxy)
+// Call Serverless API (Vercel Function proxy)
 export async function sendQueryToSutraAgent(
   query: string,
   history: ChatMessage[],
