@@ -388,3 +388,59 @@ body {
   0%, 80%, 100% { transform: scale(0.6); }
   40% { transform: scale(1.2); }
 }
+
+/* HIGH-FIDELITY MOTION GRAPHICS & AMBIENT GLOWS */
+@keyframes float-blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(40px, -60px) scale(1.15); }
+  66% { transform: translate(-30px, 30px) scale(0.85); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.bg-glow-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.08;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.bg-glow-1 {
+  width: 600px;
+  height: 600px;
+  background: var(--neon-cyan-gradient);
+  top: -10%;
+  left: 5%;
+  animation: float-blob 22s infinite ease-in-out;
+}
+
+.bg-glow-2 {
+  width: 700px;
+  height: 700px;
+  background: var(--royal-purple-gradient);
+  bottom: -15%;
+  right: 5%;
+  animation: float-blob 28s infinite ease-in-out alternate;
+}
+
+/* Sliding active pill indicator helper */
+.sliding-active-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Card hover scaling micro-interactions */
+.premium-hover-scale {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.premium-hover-scale:hover {
+  transform: scale(1.02);
+}
+

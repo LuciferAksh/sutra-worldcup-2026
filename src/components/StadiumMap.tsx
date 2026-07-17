@@ -261,8 +261,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
                     className="heatmap-pulse"
                     initial={{ fillOpacity: 0, strokeOpacity: 0 }}
                     animate={{ fillOpacity: 0.3, strokeOpacity: 0.8 }}
+                    whileHover={{ fillOpacity: 0.55, strokeWidth: 3.5, filter: 'brightness(1.2)' }}
                     exit={{ fillOpacity: 0, strokeOpacity: 0 }}
-                    transition={{ duration: 0.4 }}
+                    transition={{ duration: 0.25 }}
                     style={{ cursor: 'pointer' }}
                     onClick={() => onSelectFeature({
                       id: sector.id,
@@ -415,14 +416,19 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
               const color = isPending ? 'var(--alarm-crimson)' : 'var(--warning-amber)';
               
               return (
-                <g 
+                <motion.g 
                   key={incident.id} 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 18 }}
                   transform={`translate(${incident.x}, ${incident.y})`}
                   style={{ cursor: 'pointer' }}
                   onClick={() => onSelectIncident?.(incident)}
                 >
-                  {/* Outer flashing hazard circle */}
-                  <circle cx="0" cy="0" r="20" fill="none" stroke={color} strokeWidth="2" className="map-pulse" />
+                  {/* Double concentric flashing hazard circles */}
+                  <circle cx="0" cy="0" r="24" fill="none" stroke={color} strokeWidth="1" className="map-pulse" style={{ animationDelay: '0.4s' }} />
+                  <circle cx="0" cy="0" r="16" fill="none" stroke={color} strokeWidth="2" className="map-pulse" />
                   
                   {/* Drop Shadow */}
                   <path 
@@ -462,7 +468,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
                   >
                     ALERT
                   </text>
-                </g>
+                </motion.g>
               );
             })}
           </AnimatePresence>

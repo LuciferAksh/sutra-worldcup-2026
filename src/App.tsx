@@ -117,10 +117,14 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-primary)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-primary)', overflow: 'hidden', position: 'relative' }}>
+      
+      {/* Floating ambient drifting background glows */}
+      <div className="bg-glow-blob bg-glow-1"></div>
+      <div className="bg-glow-blob bg-glow-2"></div>
       
       {/* Premium Header Nav Bar */}
-      <header className="glass-panel" style={{ height: 'var(--nav-height)', margin: '12px 20px 0 20px', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '14px', zIndex: 100 }}>
+      <header className="glass-panel" style={{ height: 'var(--nav-height)', margin: '12px 20px 0 20px', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px', zIndex: 100, border: '1px solid rgba(0, 240, 255, 0.12)', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.4)' }}>
         
         {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -138,69 +142,52 @@ export default function App() {
         </div>
 
         {/* Persona Switch Tab Menu */}
-        <nav style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-muted)', borderRadius: '10px', padding: '4px', gap: '4px' }}>
-          <button 
-            onClick={() => setActivePersona('fan')}
-            style={{
-              padding: '6px 14px',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s',
-              background: activePersona === 'fan' ? 'linear-gradient(135deg, var(--neon-cyan) 0%, #00a8ff 100%)' : 'transparent',
-              color: activePersona === 'fan' ? '#000' : 'var(--text-secondary)'
-            }}
-          >
-            <User size={14} />
-            Fan Companion
-          </button>
-          
-          <button 
-            onClick={() => setActivePersona('staff')}
-            style={{
-              padding: '6px 14px',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s',
-              background: activePersona === 'staff' ? 'linear-gradient(135deg, var(--alarm-crimson) 0%, #d63031 100%)' : 'transparent',
-              color: activePersona === 'staff' ? '#fff' : 'var(--text-secondary)'
-            }}
-          >
-            <UserCheck size={14} />
-            Staff & Volunteers
-          </button>
-          
-          <button 
-            onClick={() => setActivePersona('organizer')}
-            style={{
-              padding: '6px 14px',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s',
-              background: activePersona === 'organizer' ? 'linear-gradient(135deg, var(--fifa-green) 0%, #10ac84 100%)' : 'transparent',
-              color: activePersona === 'organizer' ? '#000' : 'var(--text-secondary)'
-            }}
-          >
-            <Layers size={14} />
-            Control Tower
-          </button>
+        <nav style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-muted)', borderRadius: '12px', padding: '4px', gap: '4px', position: 'relative' }}>
+          {[
+            { id: 'fan', name: 'Fan Companion', icon: User, activeBg: 'linear-gradient(135deg, var(--neon-cyan) 0%, #0077ff 100%)', activeColor: 'var(--neon-cyan)', textColor: '#000' },
+            { id: 'staff', name: 'Staff & Volunteers', icon: UserCheck, activeBg: 'linear-gradient(135deg, var(--alarm-crimson) 0%, #cc003c 100%)', activeColor: 'var(--alarm-crimson)', textColor: '#fff' },
+            { id: 'organizer', name: 'Control Tower', icon: Layers, activeBg: 'linear-gradient(135deg, var(--fifa-green) 0%, #00b377 100%)', activeColor: 'var(--fifa-green)', textColor: '#000' }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isActive = activePersona === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActivePersona(tab.id as any);
+                  logEvent(`Switched persona to: ${tab.id.toUpperCase()}`);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  position: 'relative',
+                  background: 'transparent',
+                  color: isActive ? tab.textColor : 'var(--text-secondary)',
+                  transition: 'color 0.25s ease',
+                  outline: 'none',
+                  zIndex: 1
+                }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activePersonaTab"
+                    className="sliding-active-bg"
+                    style={{ background: tab.activeBg, filter: `drop-shadow(0 2px 10px ${tab.activeColor}40)` }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <Icon size={14} style={{ position: 'relative', zIndex: 2 }} />
+                <span style={{ position: 'relative', zIndex: 2 }}>{tab.name}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {/* Connection Settings & Indicators */}

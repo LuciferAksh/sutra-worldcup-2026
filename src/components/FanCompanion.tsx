@@ -347,8 +347,11 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
           {messages.map((msg, index) => {
             const isUser = msg.role === 'user';
             return (
-              <div 
+              <motion.div 
                 key={index} 
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 style={{ 
                   display: 'flex', 
                   justifyContent: isUser ? 'flex-end' : 'flex-start',
@@ -377,7 +380,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
                 >
                   {msg.content}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
           
