@@ -1,4 +1,4 @@
-// Secure GenAI Proxy - Hybrid Handler supporting both Azure Functions & Vercel Serverless runtimes
+// Secure GenAI Proxy - Vercel Serverless Function (ES Module Edition)
 
 // Retrieve environment variables
 const AZURE_OPENAI_KEY = process.env.AZURE_OPENAI_KEY;
@@ -182,120 +182,59 @@ Guidelines:
   return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check that your deployment name, endpoints, or key strings are correct inside your portal configuration.`;
 }
 
-module.exports = async function (arg1, arg2) {
-  // Detect if running under Azure Functions (where arg1 is context) or Vercel/Express (where arg1 is req)
-  const isAzure = arg1 && typeof arg1.log === 'function' && arg1.res !== undefined;
+export default async function handler(req, res) {
+  const origin = req.headers?.origin || '*';
 
-  if (isAzure) {
-    // ----------------------------------------------------
-    // Azure Functions Programming Model
-    // ----------------------------------------------------
-    const context = arg1;
-    const req = arg2;
-
-    if (req.method === "OPTIONS") {
-      context.res = {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      };
-      return;
-    }
-
-    try {
-      const { query, history, persona, ragContext } = req.body || {};
-
-      if (!query) {
-        context.res = {
-          status: 400,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json"
-          },
-          body: { error: "Query is required" }
-        };
-        return;
-      }
-
-      const logHelper = {
-        log: (msg) => context.log(msg),
-        warn: (msg) => (context.log.warn ? context.log.warn(msg) : context.log(msg)),
-        error: (msg) => (context.log.error ? context.log.error(msg) : context.log(msg))
-      };
-
-      const reply = await executeChatLogic(query, persona, history, ragContext, logHelper);
-      
-      context.res = {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json"
-        },
-        body: { reply }
-      };
-    } catch (err) {
-      context.res = {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json"
-        },
-        body: { error: err.message }
-      };
-    }
-  } else {
-    // ----------------------------------------------------
-    // Vercel Serverless Function Programming Model
-    // ----------------------------------------------------
-    const req = arg1;
-    const res = arg2;
-
-    const origin = req.headers?.origin || '*';
-
-    if (req.method === "OPTIONS") {
-      res.writeHead(200, {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      });
-      res.end();
-      return;
-    }
-
-    try {
-      const { query, history, persona, ragContext } = req.body || {};
-
-      if (!query) {
-        res.writeHead(400, {
-          "Access-Control-Allow-Origin": origin,
-          "Content-Type": "application/json"
-        });
-        res.end(JSON.stringify({ error: "Query is required" }));
-        return;
-      }
-
-      const logHelper = {
-        log: console.log,
-        warn: console.warn,
-        error: console.error
-      };
-
-      const reply = await executeChatLogic(query, persona, history, ragContext, logHelper);
-      
-      res.writeHead(200, {
-        "Access-Control-Allow-Origin": origin,
-        "Content-Type": "application/json"
-      });
-      res.end(JSON.stringify({ reply }));
-    } catch (err) {
-      res.writeHead(500, {
-        "Access-Control-Allow-Origin": origin,
-        "Content-Type": "application/json"
-      });
-      res.end(JSON.stringify({ error: err.message }));
-    }
+  // Handle preflight options check
+  if (req.method === "OPTIONS") {
+    res.writeHead(200, {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    });
+    res.end();
+    return;
   }
-};
+
+  try {
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        // Failed to parse
+      }
+    }
+
+    const { query, history, persona, ragContext } = body || {};
+
+    if (!query) {
+      res.writeHead(400, {
+        "Access-Control-Allow-Origin": origin,
+        "Content-Type": "application/json"
+      });
+      res.end(JSON.stringify({ error: "Query is required" }));
+      return;
+    }
+
+    const logHelper = {
+      log: console.log,
+      warn: console.warn,
+      error: console.error
+    };
+
+    const reply = await executeChatLogic(query, persona, history, ragContext, logHelper);
+    
+    res.writeHead(200, {
+      "Access-Control-Allow-Origin": origin,
+      "Content-Type": "application/json"
+    });
+    res.end(JSON.stringify({ reply }));
+  } catch (err) {
+    res.writeHead(500, {
+      "Access-Control-Allow-Origin": origin,
+      "Content-Type": "application/json"
+    });
+    res.end(JSON.stringify({ error: err.message }));
+  }
+}
