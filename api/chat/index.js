@@ -176,8 +176,8 @@ Guidelines:
   
   const azureKeyStatus = AZURE_OPENAI_KEY ? `Configured (Length: ${AZURE_OPENAI_KEY.length})` : "Missing";
   const azureEndpointStatus = AZURE_OPENAI_ENDPOINT ? "Configured" : "Missing";
-  const geminiKeyStatus = GEMINI_API_KEY ? `Configured (Length: ${geminiKeyStatus ? geminiKeyStatus.length : 0})` : "Missing";
-  const openaiKeyStatus = OPENAI_API_KEY ? `Configured (Length: ${openaiKeyStatus ? openaiKeyStatus.length : 0})` : "Missing";
+  const geminiKeyStatus = GEMINI_API_KEY ? `Configured (Length: ${GEMINI_API_KEY.length})` : "Missing";
+  const openaiKeyStatus = OPENAI_API_KEY ? `Configured (Length: ${OPENAI_API_KEY.length})` : "Missing";
 
   return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check that your deployment name, endpoints, or key strings are correct inside your portal configuration.`;
 }
