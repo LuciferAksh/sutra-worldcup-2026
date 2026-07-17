@@ -284,19 +284,31 @@ export async function sendQueryToSutraAgent(
       }
       return replyText;
     } else {
-      throw new Error('API server returned error');
+      const errText = await response.text();
+      let parsedErr = errText;
+      try {
+        const jsonErr = JSON.parse(errText);
+        parsedErr = jsonErr.error || jsonErr.message || errText;
+      } catch (e) {
+        // Not JSON
+      }
+      throw new Error(`API returned status ${response.status}: ${parsedErr}`);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.warn("SUTRA API Offline or Unconfigured. Falling back to local RAG Engine.", err);
     
     // Simulate API delay for realism
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const localReply = generateLocalResponse(query, persona, ragMatches);
+    const warningPrefix = `⚠️ **Local RAG Fallback** (API Error: *${err.message || 'Connection failed'}*)\n\n`;
+    
+    const combinedReply = warningPrefix + localReply;
+    
     if (useSpeech && 'speechSynthesis' in window) {
       speakText(localReply);
     }
-    return localReply;
+    return combinedReply;
   }
 }
 

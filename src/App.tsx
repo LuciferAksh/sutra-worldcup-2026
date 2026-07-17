@@ -196,7 +196,7 @@ export default function App() {
           {/* Live System Indicator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
             <span className="live-pulse" style={{ background: savedSettings && provider === 'azure-openai' ? 'var(--neon-cyan)' : 'var(--fifa-green)' }}></span>
-            <span>{savedSettings && provider === 'azure-openai' ? 'Azure OpenAI Live' : 'SUTRA AI Local'}</span>
+            <span>{savedSettings && provider === 'azure-openai' ? 'Vercel Serverless Live' : 'SUTRA AI Local'}</span>
           </div>
 
           {/* Test Console Trigger */}
@@ -364,7 +364,7 @@ export default function App() {
                     onChange={(e) => setProvider(e.target.value as any)}
                     style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', outline: 'none', marginTop: '4px' }}
                   >
-                    <option value="azure-openai">☁️ Azure Server API (Using Azure Env variables)</option>
+                    <option value="azure-openai">☁️ Vercel Serverless API (Using Vercel Env variables)</option>
                     <option value="local">🤖 Local RAG fallback (Offline Simulation)</option>
                   </select>
                 </div>
@@ -372,7 +372,7 @@ export default function App() {
                 {provider === 'azure-openai' ? (
                   <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' }}>
                     🔒 **Server-Side Credentials Active**:<br />
-                    SUTRA will query the serverless Azure Function `/api/chat` using the keys securely configured in your Azure Portal. No keys are required in the client browser.
+                    SUTRA will query the serverless Vercel function `/api/chat` using the keys securely configured in your Vercel Dashboard. No keys are required in the client browser.
                   </div>
                 ) : (
                   <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' }}>
