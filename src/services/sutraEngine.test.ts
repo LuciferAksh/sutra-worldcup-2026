@@ -37,13 +37,27 @@ describe('SUTRA AI Engine & RAG Retrieval', () => {
         status: 500,
         text: () => Promise.resolve('Internal Server Error')
       })
-    ) as any;
+    ) as unknown as typeof globalThis.fetch;
 
     const response = await sendQueryToSutraAgent('wheelchair accessibility elevators', [], 'fan');
     expect(response).toContain('⚠️ **Local RAG Fallback**');
     expect(response).toContain('API returned status 500');
 
     globalThis.fetch = originalFetch;
+  });
+
+  it('should reject empty or whitespace queries', async () => {
+    const emptyResponse = await sendQueryToSutraAgent('', [], 'fan');
+    expect(emptyResponse).toContain('Query cannot be empty');
+
+    const whitespaceResponse = await sendQueryToSutraAgent('   ', [], 'fan');
+    expect(whitespaceResponse).toContain('Query cannot be empty');
+  });
+
+  it('should reject queries exceeding 2000 characters', async () => {
+    const longQuery = 'a'.repeat(2001);
+    const longResponse = await sendQueryToSutraAgent(longQuery, [], 'fan');
+    expect(longResponse).toContain('Query length exceeds maximum limit');
   });
   
 });

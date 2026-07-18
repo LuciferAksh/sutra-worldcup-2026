@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, Volume2, VolumeX, Globe, Compass, Bus, Award, Leaf } from 'lucide-react';
 import { sendQueryToSutraAgent, startVoiceRecognition } from '../services/sutraEngine';
-import type { ChatMessage } from '../services/sutraEngine';
+import type { ChatMessage, SpeechRecognitionInstance } from '../services/sutraEngine';
 import { MAP_FEATURES } from './StadiumMap';
 import type { MapFeature } from './StadiumMap';
 
@@ -12,6 +12,175 @@ interface FanCompanionProps {
   accessibilityOnly: boolean;
   setAccessibilityOnly: (active: boolean) => void;
 }
+
+const TRANSLATIONS = {
+  EN: {
+    concierge: 'SUTRA CORE CONCIERGE',
+    nav: 'WAYFINDING GATEWAYS',
+    transit: 'LIVE TRANSIT RADAR',
+    eco: 'ECO-SCORE CAMPAIGN',
+    start: 'START POINT',
+    end: 'DESTINATION',
+    offset: 'Offset Carbon',
+    shuttle: 'Electric Shuttle Loops',
+    metro: 'Century Metrolink red',
+    biking: 'Zero-Emission Bike Valet'
+  },
+  ES: {
+    concierge: 'CONSERJE CORE SUTRA',
+    nav: 'ACCESOS DE NAVEGACIÓN',
+    transit: 'RADAR DE TRÁNSITO EN VIVO',
+    eco: 'CAMPAÑA DE ECO-PUNTOS',
+    start: 'PUNTO DE PARTIDA',
+    end: 'DESTINO',
+    offset: 'Compensar Carbono',
+    shuttle: 'Lanzaderas Eléctricas',
+    metro: 'Metro de la Ciudad roja',
+    biking: 'Estación de Bici Ecológica'
+  },
+  FR: {
+    concierge: 'CONCIERGE CORE SUTRA',
+    nav: 'PORTAILS DE NAVIGATION',
+    transit: 'RADAR TRANSPORT EN DIRECT',
+    eco: 'CAMPAGNE DE SCORE ÉCO',
+    start: 'POINT DE DÉPART',
+    end: 'DESTINATION',
+    offset: 'Compenser Carbone',
+    shuttle: 'Navettes Électriques',
+    metro: 'Métro de la Ville rouge',
+    biking: 'Véloparc Zéro-Émission'
+  }
+} as const;
+
+const ACCESSIBLE_BTN_STYLE = {
+  borderRadius: '6px',
+  padding: '4px 10px',
+  fontSize: '0.65rem',
+  fontWeight: 700,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  transition: 'all 0.2s'
+} as const;
+
+const INPUT_STYLE = {
+  width: '42px',
+  padding: '4px',
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--border-muted)',
+  borderRadius: '6px',
+  color: '#fff',
+  fontSize: '0.68rem',
+  outline: 'none'
+} as const;
+
+const INPUT_FLEX_STYLE = {
+  flex: 1,
+  padding: '4px',
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--border-muted)',
+  borderRadius: '6px',
+  color: '#fff',
+  fontSize: '0.68rem',
+  outline: 'none'
+} as const;
+
+const TTS_BTN_STYLE = {
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center'
+} as const;
+
+const GLOBE_CONTAINER_STYLE = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  background: 'rgba(255,255,255,0.02)',
+  padding: '2px 8px',
+  borderRadius: '6px',
+  border: '1px solid var(--border-muted)'
+} as const;
+
+const SELECT_LANG_STYLE = {
+  background: 'none',
+  border: 'none',
+  color: '#fff',
+  fontSize: '0.7rem',
+  outline: 'none',
+  cursor: 'pointer',
+  fontWeight: 800
+} as const;
+
+const ECO_OVERLAY_STYLE = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: 'rgba(0, 255, 170, 0.12)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 5,
+  pointerEvents: 'none'
+} as const;
+
+const S_AVATAR_STYLE = {
+  width: '30px',
+  height: '30px',
+  borderRadius: '8px',
+  background: 'linear-gradient(135deg, var(--neon-cyan) 0%, var(--fifa-green) 100%)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontSize: '0.75rem',
+  fontWeight: 900,
+  color: '#030712',
+  flexShrink: 0,
+  boxShadow: '0 0 10px rgba(0, 240, 255, 0.2)'
+} as const;
+
+const LISTEN_BTN_STYLE = {
+  width: '42px',
+  height: '42px',
+  borderRadius: '10px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s',
+  position: 'relative',
+  zIndex: 2
+} as const;
+
+const CHAT_INPUT_STYLE = {
+  flex: 1,
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--border-muted)',
+  borderRadius: '10px',
+  padding: '12px 16px',
+  color: '#fff',
+  outline: 'none',
+  fontSize: '0.8rem',
+  transition: 'border 0.2s'
+} as const;
+
+const SEND_BTN_STYLE = {
+  width: '42px',
+  height: '42px',
+  borderRadius: '10px',
+  border: 'none',
+  background: 'var(--neon-cyan-gradient)',
+  color: '#030712',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: '0 4px 15px var(--neon-cyan-glow)'
+} as const;
 
 export const FanCompanion: React.FC<FanCompanionProps> = ({
   onRouteSelect,
@@ -30,7 +199,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [voiceSupport, setVoiceSupport] = useState(true);
   const [ttsEnabled, setTtsEnabled] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   
   // Navigation State
   const [startPoint, setStartPoint] = useState('gate-a');
@@ -46,7 +215,18 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
   // Language State
   const [language, setLanguage] = useState<'EN' | 'ES' | 'FR'>('EN');
 
+  // Timer reference to avoid memory leaks
+  const ecoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic Transit ETA Countdown Timer
+  const [shuttleEta, setShuttleEta] = useState(180); // 3 minutes in seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setShuttleEta(prev => (prev <= 0 ? 180 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -79,7 +259,19 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
   // Trigger routing calculation
   useEffect(() => {
     onRouteSelect(startPoint, endPoint);
-  }, [startPoint, endPoint]);
+  }, [startPoint, endPoint, onRouteSelect]);
+
+  // Active unmount cleanups for Speech Recognition and Eco Toast Ref
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+      if (ecoTimeoutRef.current) {
+        clearTimeout(ecoTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -138,9 +330,12 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
     setEcoActionsLogged(prev => [`Logged: ${action} (+${points} pts)`, ...prev].slice(0, 2));
     setEcoUnlocked(true);
     
-    // Safety check: clean up previous timer if it exists to avoid leak
-    const timer = setTimeout(() => setEcoUnlocked(false), 2000);
-    return () => clearTimeout(timer);
+    if (ecoTimeoutRef.current) {
+      clearTimeout(ecoTimeoutRef.current);
+    }
+    ecoTimeoutRef.current = setTimeout(() => {
+      setEcoUnlocked(false);
+    }, 2000);
   };
 
   const handleCalculateOffset = () => {
@@ -153,57 +348,18 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
     handleLogEcoAction(`Offset ${co2Saved}kg CO2 via ${calcMode.toUpperCase()}`, Math.max(10, Math.round(co2Saved * 10)));
   };
 
-  const translations = {
-    EN: {
-      concierge: 'SUTRA CORE CONCIERGE',
-      nav: 'WAYFINDING GATEWAYS',
-      transit: 'LIVE TRANSIT RADAR',
-      eco: 'ECO-SCORE CAMPAIGN',
-      start: 'START POINT',
-      end: 'DESTINATION',
-      offset: 'Offset Carbon',
-      shuttle: 'Electric Shuttle Loops',
-      metro: 'Century Metrolink red',
-      biking: 'Zero-Emission Bike Valet'
-    },
-    ES: {
-      concierge: 'CONSERJE CORE SUTRA',
-      nav: 'ACCESOS DE NAVEGACIÓN',
-      transit: 'RADAR DE TRÁNSITO EN VIVO',
-      eco: 'CAMPAÑA DE ECO-PUNTOS',
-      start: 'PUNTO DE PARTIDA',
-      end: 'DESTINO',
-      offset: 'Compensar Carbono',
-      shuttle: 'Lanzaderas Eléctricas',
-      metro: 'Metro de la Ciudad roja',
-      biking: 'Estación de Bici Ecológica'
-    },
-    FR: {
-      concierge: 'CONCIERGE CORE SUTRA',
-      nav: 'PORTAILS DE NAVIGATION',
-      transit: 'RADAR TRANSPORT EN DIRECT',
-      eco: 'CAMPAGNE DE SCORE ÉCO',
-      start: 'POINT DE DÉPART',
-      end: 'DESTINATION',
-      offset: 'Compenser Carbone',
-      shuttle: 'Navettes Électriques',
-      metro: 'Métro de la Ville rouge',
-      biking: 'Véloparc Zéro-Émission'
-    }
-  };
-
-  const currentDict = translations[language];
+  const currentDict = TRANSLATIONS[language];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="util-flex-col-gap-xl">
       
       {/* Upper Grid Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
+      <div className="util-grid-1-2-to-1">
         
         {/* Navigation Selector Card */}
-        <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ padding: '18px' }}>
+          <div className="util-flex-between">
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px' }} className="util-flex-align-center-gap-sm">
               <Compass size={14} style={{ color: 'var(--neon-cyan)' }} />
               {currentDict.nav}
             </h4>
@@ -211,28 +367,20 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
             <button 
               onClick={() => setAccessibilityOnly(!accessibilityOnly)}
               style={{
+                ...ACCESSIBLE_BTN_STYLE,
                 background: accessibilityOnly ? 'rgba(0, 255, 170, 0.08)' : 'rgba(255,255,255,0.02)',
                 border: `1px solid ${accessibilityOnly ? 'var(--fifa-green)' : 'var(--border-muted)'}`,
-                color: accessibilityOnly ? 'var(--fifa-green)' : 'var(--text-secondary)',
-                borderRadius: '6px',
-                padding: '4px 10px',
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                transition: 'all 0.2s'
+                color: accessibilityOnly ? 'var(--fifa-green)' : 'var(--text-secondary)'
               }}
             >
               ♿ ACCESSIBLE
             </button>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="util-flex-col-gap-md">
             {/* Start Gate Chip Selector */}
             <div>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+              <span className="util-text-secondary util-text-xs" style={{ display: 'block', marginBottom: '6px', fontWeight: 700 }}>
                 {currentDict.start}
               </span>
               <div className="custom-selector-grid">
@@ -250,7 +398,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
             
             {/* End Point Chip Selector */}
             <div>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+              <span className="util-text-secondary util-text-xs" style={{ display: 'block', marginBottom: '6px', fontWeight: 700 }}>
                 {currentDict.end}
               </span>
               <div className="custom-selector-grid">
@@ -269,7 +417,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
         </div>
 
         {/* Eco Score Gamification Card */}
-        <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', overflow: 'hidden' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ padding: '18px', position: 'relative', overflow: 'hidden' }}>
           
           <AnimatePresence>
             {ecoUnlocked && (
@@ -277,7 +425,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 255, 170, 0.12)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5, pointerEvents: 'none' }}
+                style={ECO_OVERLAY_STYLE}
               >
                 <div style={{ color: 'var(--fifa-green)', fontWeight: 900, fontSize: '1.1rem', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
                   🌳 COMMUTE LOGGED!
@@ -286,8 +434,8 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
             )}
           </AnimatePresence>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="util-flex-between">
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px' }} className="util-flex-align-center-gap-sm">
               <Leaf size={14} style={{ color: 'var(--fifa-green)' }} />
               {currentDict.eco}
             </h4>
@@ -297,29 +445,29 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="util-flex-align-center-gap-md util-flex-1">
+            <div className="util-flex-align-center" style={{ position: 'relative', justifyContent: 'center' }}>
               <svg width="50" height="50" viewBox="0 0 36 36">
                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--fifa-green)" strokeWidth="3" strokeDasharray={`${Math.min(ecoPoints / 4, 100)}, 100`} strokeLinecap="round" />
               </svg>
               <div style={{ position: 'absolute', fontSize: '0.9rem', fontWeight: 900, fontFamily: 'Outfit' }}>{ecoPoints}</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="util-flex-col-gap-xs util-flex-1">
               <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700 }}>CO2 TRAVEL OFFSET CALCULATOR:</div>
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <div className="util-flex-align-center-gap-xs">
                 <input 
                   type="number" 
                   value={calcDistance} 
                   onChange={(e) => setCalcDistance(e.target.value)}
-                  style={{ width: '42px', padding: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', fontSize: '0.68rem', outline: 'none' }}
+                  style={INPUT_STYLE}
                   placeholder="km"
                 />
                 <select
                   aria-label="Transport Mode Selection"
                   value={calcMode}
                   onChange={(e) => setCalcMode(e.target.value as 'train' | 'bus' | 'carpool')}
-                  style={{ flex: 1, padding: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', fontSize: '0.68rem', outline: 'none' }}
+                  style={INPUT_FLEX_STYLE}
                 >
                   <option value="train">🚇 Train (100g/km)</option>
                   <option value="bus">🚌 Bus (80g/km)</option>
@@ -335,13 +483,13 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
               </div>
               
               {/* Quick Actions */}
-              <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+              <div className="util-flex-gap-xs" style={{ marginTop: '2px' }}>
                 <button onClick={() => handleLogEcoAction('Water Refill', 25)} className="selector-chip active-green" style={{ padding: '3px 6px', fontSize: '0.6rem' }}>+ REFILL</button>
                 <button onClick={() => handleLogEcoAction('Recycled Cup', 30)} className="selector-chip active-green" style={{ padding: '3px 6px', fontSize: '0.6rem' }}>+ SORT</button>
               </div>
 
               {/* Logged List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px', fontSize: '0.58rem', color: 'var(--fifa-green)', fontWeight: 700 }}>
+              <div className="util-flex-col" style={{ gap: '2px', marginTop: '2px', fontSize: '0.58rem', color: 'var(--fifa-green)', fontWeight: 700 }}>
                 {ecoActionsLogged.map((act) => <div key={act}>{act}</div>)}
               </div>
             </div>
@@ -351,33 +499,33 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
       </div>
 
       {/* Main AI Chat Concierge Box */}
-      <div className="glass-panel" style={{ flex: 1, minHeight: '340px', display: 'flex', flexDirection: 'column', padding: '20px', gap: '14px' }}>
+      <div className="glass-panel util-flex-col-gap-md util-flex-1" style={{ minHeight: '340px', padding: '20px' }}>
         
         {/* Chat Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="util-flex-between util-border-bottom" style={{ paddingBottom: '12px' }}>
+          <div className="util-flex-align-center-gap-sm">
             <span className="live-pulse"></span>
             <h4 style={{ fontSize: '0.9rem', fontWeight: 900, fontFamily: 'Outfit', letterSpacing: '0.5px' }}>{currentDict.concierge}</h4>
           </div>
           
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="util-flex-align-center-gap-md">
             {/* TTS Button */}
             <button 
               onClick={() => setTtsEnabled(!ttsEnabled)}
-              style={{ background: 'none', border: 'none', color: ttsEnabled ? 'var(--neon-cyan)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              style={{ ...TTS_BTN_STYLE, color: ttsEnabled ? 'var(--neon-cyan)' : 'var(--text-muted)' }}
               title="Toggle Text-To-Speech Output"
             >
               {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
             </button>
 
             {/* Language Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.02)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>
+            <div style={GLOBE_CONTAINER_STYLE}>
               <Globe size={12} style={{ color: 'var(--neon-cyan)' }} />
               <select 
                 aria-label="Language Selector"
                 value={language} 
                 onChange={(e) => setLanguage(e.target.value as 'EN' | 'ES' | 'FR')}
-                style={{ background: 'none', border: 'none', color: '#fff', fontSize: '0.7rem', outline: 'none', cursor: 'pointer', fontWeight: 800 }}
+                style={SELECT_LANG_STYLE}
               >
                 <option value="EN" style={{ background: 'var(--bg-primary)' }}>EN</option>
                 <option value="ES" style={{ background: 'var(--bg-primary)' }}>ES</option>
@@ -388,7 +536,7 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
         </div>
 
         {/* Messages Log */}
-        <div ref={chatContainerRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', paddingRight: '4px' }}>
+        <div ref={chatContainerRef} role="log" aria-live="polite" className="util-flex-col-gap-md util-flex-1" style={{ overflowY: 'auto', paddingRight: '4px' }}>
           {messages.map((msg, index) => {
             const isUser = msg.role === 'user';
             return (
@@ -397,15 +545,15 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
                 initial={{ opacity: 0, y: 12, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="util-flex"
                 style={{ 
-                  display: 'flex', 
                   justifyContent: isUser ? 'flex-end' : 'flex-start',
                   alignItems: 'flex-start',
                   gap: '10px'
                 }}
               >
                 {!isUser && (
-                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--neon-cyan) 0%, var(--fifa-green) 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.75rem', fontWeight: 900, color: '#030712', flexShrink: 0, boxShadow: '0 0 10px rgba(0, 240, 255, 0.2)' }}>
+                  <div style={S_AVATAR_STYLE}>
                     S
                   </div>
                 )}
@@ -430,11 +578,11 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
           })}
           
           {isTyping && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--neon-cyan) 0%, var(--fifa-green) 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.75rem', fontWeight: 900, color: '#030712' }}>
+            <div className="util-flex-align-center-gap-md">
+              <div style={S_AVATAR_STYLE}>
                 S
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-muted)', borderRadius: '16px', padding: '12px 20px', display: 'flex', gap: '4px' }}>
+              <div className="util-chat-user util-flex-align-center-gap-xs" style={{ padding: '12px 20px', borderRadius: '16px' }}>
                 <span className="typing-dot"></span>
                 <span className="typing-dot"></span>
                 <span className="typing-dot"></span>
@@ -444,27 +592,19 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
         </div>
 
         {/* Input Controls Bar */}
-        <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '14px' }}>
+        <div className="util-flex-gap-md" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '14px' }}>
           
           {voiceSupport && (
             <div className="mic-wave-container">
               {isListening && <div className="mic-wave"></div>}
               <button 
                 onClick={toggleVoice}
+                aria-label="Toggle voice input"
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '10px',
+                  ...LISTEN_BTN_STYLE,
                   border: `1px solid ${isListening ? 'var(--alarm-crimson)' : 'var(--border-muted)'}`,
                   background: isListening ? 'rgba(255, 26, 83, 0.12)' : 'rgba(255, 255, 255, 0.02)',
-                  color: isListening ? 'var(--alarm-crimson)' : '#fff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s',
-                  position: 'relative',
-                  zIndex: 2
+                  color: isListening ? 'var(--alarm-crimson)' : '#fff'
                 }}
               >
                 {isListening ? <MicOff size={18} /> : <Mic size={18} />}
@@ -484,36 +624,13 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
               }
             }}
             disabled={isListening}
-            style={{
-              flex: 1,
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-muted)',
-              borderRadius: '10px',
-              padding: '12px 16px',
-              color: '#fff',
-              outline: 'none',
-              fontSize: '0.8rem',
-              transition: 'border 0.2s',
-            }}
-            onFocus={(e) => e.target.style.borderColor = 'rgba(0, 240, 255, 0.3)'}
-            onBlur={(e) => e.target.style.borderColor = 'var(--border-muted)'}
+            style={CHAT_INPUT_STYLE}
           />
 
           <button 
             onClick={() => handleSendMessage(inputValue)}
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              border: 'none',
-              background: 'var(--neon-cyan-gradient)',
-              color: '#030712',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 15px var(--neon-cyan-glow)'
-            }}
+            aria-label="Send message"
+            style={SEND_BTN_STYLE}
           >
             <Send size={16} />
           </button>
@@ -523,16 +640,16 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
       </div>
 
       {/* Transit Loop Hub Radar */}
-      <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div className="glass-panel util-flex-col-gap-sm" style={{ padding: '18px' }}>
+        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px' }} className="util-flex-align-center-gap-sm">
           <Bus size={14} style={{ color: 'var(--neon-cyan)' }} />
           {currentDict.transit}
         </h4>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.75rem' }}>
+        <div className="util-flex-col util-text-xs" style={{ gap: '8px' }}>
           
           {/* Shuttle */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-muted)' }}>
+          <div className="util-flex-between util-rounded-lg" style={{ background: 'rgba(255,255,255,0.01)', padding: '10px 14px', border: '1px solid var(--border-muted)' }}>
             <div>
               <div style={{ fontWeight: 800, color: '#fff' }}>⚡ {currentDict.shuttle}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', marginTop: '2px' }}>Terminal Loop ➡️ East Loop (Gate B)</div>
@@ -544,19 +661,21 @@ export const FanCompanion: React.FC<FanCompanionProps> = ({
           </div>
 
           {/* Metro */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-muted)' }}>
+          <div className="util-flex-between util-rounded-lg" style={{ background: 'rgba(255,255,255,0.01)', padding: '10px 14px', border: '1px solid var(--border-muted)' }}>
             <div>
               <div style={{ fontWeight: 800, color: '#fff' }}>🚇 {currentDict.metro}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', marginTop: '2px' }}>Century Station ➡️ Hub North (Gate A)</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ color: 'var(--neon-cyan)', fontWeight: 800 }}>ARRIVING IN 3 MINS</div>
+              <div style={{ color: 'var(--neon-cyan)', fontWeight: 800 }}>
+                {shuttleEta > 0 ? `ARRIVING IN ${Math.floor(shuttleEta / 60)}m ${shuttleEta % 60}s` : 'ARRIVED'}
+              </div>
               <span className="badge badge-amber" style={{ fontSize: '0.55rem', padding: '2px 6px', marginTop: '3px' }}>HEAVY LOAD</span>
             </div>
           </div>
 
           {/* Biking */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-muted)' }}>
+          <div className="util-flex-between util-rounded-lg" style={{ background: 'rgba(255,255,255,0.01)', padding: '10px 14px', border: '1px solid var(--border-muted)' }}>
             <div>
               <div style={{ fontWeight: 800, color: '#fff' }}>🚲 {currentDict.biking}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', marginTop: '2px' }}>Secure lockers & check-in rewards at Gate A</div>

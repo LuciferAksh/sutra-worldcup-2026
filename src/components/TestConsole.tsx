@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
 export interface TestLogEntry {
@@ -26,8 +26,14 @@ const ACTION_COLUMN_STYLE = { display: 'flex', flexDirection: 'column', gap: '12
 const STAT_BOX_STYLE = { background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-muted)', padding: '12px', borderRadius: '10px', fontSize: '0.7rem', color: 'var(--text-secondary)', lineHeight: '1.4' } as const;
 const TERMINAL_HEADER_STYLE = { fontSize: '0.75rem', fontWeight: 800, color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } as const;
 const TERMINAL_BOX_STYLE = { flex: 1, minHeight: '200px', background: '#04070c', border: '1px solid rgba(0, 240, 255, 0.1)', borderRadius: '8px', padding: '12px', fontFamily: 'monospace', fontSize: '0.68rem', color: '#00ffaa', overflowY: 'auto', maxHeight: '220px', display: 'flex', flexDirection: 'column', gap: '4px' } as const;
+const CLOSE_BTN_STYLE = { padding: '6px 12px', fontSize: '0.7rem' } as const;
+const HARNESS_HEADER_STYLE = { fontSize: '0.75rem', fontWeight: 800, color: '#fff' } as const;
+const RUN_BTN_STYLE = { fontSize: '0.72rem', padding: '10px 14px', width: '100%', justifyContent: 'center' } as const;
+const SIM_BTN_STYLE = { fontSize: '0.72rem', padding: '10px 14px', width: '100%' } as const;
+const TERMINAL_CONTAINER_STYLE = { gap: '6px' } as const;
+const CLEAR_BTN_STYLE = { background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.65rem', cursor: 'pointer' } as const;
 
-export const TestConsole: React.FC<TestConsoleProps> = ({
+export const TestConsole: React.FC<TestConsoleProps> = memo(({
   show,
   onClose,
   runSimulatedTests,
@@ -44,12 +50,15 @@ export const TestConsole: React.FC<TestConsoleProps> = ({
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="test-console-title"
         className="glass-panel util-flex-col"
         style={CONTAINER_STYLE}
       >
         <div style={HEADER_STYLE}>
           <div>
-            <h3 style={HEADER_TITLE_STYLE}>
+            <h3 id="test-console-title" style={HEADER_TITLE_STYLE}>
               🧪 SUTRA HARNESS & TELEMETRY
             </h3>
             <span style={HEADER_SUBTITLE_STYLE}>
@@ -59,7 +68,7 @@ export const TestConsole: React.FC<TestConsoleProps> = ({
           <button 
             onClick={onClose}
             className="btn-secondary" 
-            style={{ padding: '6px 12px', fontSize: '0.7rem' }}
+            style={CLOSE_BTN_STYLE}
           >
             Close Console
           </button>
@@ -70,13 +79,13 @@ export const TestConsole: React.FC<TestConsoleProps> = ({
           
           {/* Actions list */}
           <div className="util-flex-col" style={ACTION_COLUMN_STYLE}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#fff' }}>HARNESS CONTROLS</div>
+            <div style={HARNESS_HEADER_STYLE}>HARNESS CONTROLS</div>
             
             <button 
               onClick={runSimulatedTests} 
               disabled={isRunningTests}
               className="btn-neon" 
-              style={{ fontSize: '0.72rem', padding: '10px 14px', width: '100%', justifyContent: 'center' }}
+              style={RUN_BTN_STYLE}
             >
               {isRunningTests ? 'Executing tests...' : 'Run Integration Suite'}
             </button>
@@ -84,7 +93,7 @@ export const TestConsole: React.FC<TestConsoleProps> = ({
             <button 
               onClick={handleTriggerRandomIncident}
               className="btn-secondary" 
-              style={{ fontSize: '0.72rem', padding: '10px 14px', width: '100%' }}
+              style={SIM_BTN_STYLE}
             >
               Simulate Incident Trigger
             </button>
@@ -98,12 +107,12 @@ export const TestConsole: React.FC<TestConsoleProps> = ({
           </div>
 
           {/* Log terminal */}
-          <div className="util-flex-col" style={{ gap: '6px' }}>
+          <div className="util-flex-col" style={TERMINAL_CONTAINER_STYLE}>
             <div style={TERMINAL_HEADER_STYLE}>
               <span>REAL-TIME TELEMETRY FEED</span>
               <button 
                 onClick={clearLogs}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.65rem', cursor: 'pointer' }}
+                style={CLEAR_BTN_STYLE}
               >
                 Clear
               </button>
@@ -129,4 +138,4 @@ export const TestConsole: React.FC<TestConsoleProps> = ({
       </motion.div>
     </div>
   );
-};
+});

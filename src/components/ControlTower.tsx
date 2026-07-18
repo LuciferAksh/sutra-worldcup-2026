@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from 'recharts';
 import { ShieldAlert, Cpu, Leaf, Users, ChevronRight, Activity } from 'lucide-react';
 import type { IncidentMarker } from './StadiumMap';
@@ -24,7 +24,7 @@ const PREDICTIVE_ALERTS = [
   { id: 'pa-3', title: '♿ LIFT MOTOR TEMPERATURE WARN', desc: 'West elevator lift motor thermal sensors at 78C. Dispatching engineering tech team.', time: '18m ago', severity: 'low' },
 ];
 
-export const ControlTower: React.FC<ControlTowerProps> = ({
+export const ControlTower: React.FC<ControlTowerProps> = memo(({
   incidents,
   onTriggerRandomIncident,
   crowdMultiplier,
@@ -41,63 +41,63 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
   ], [crowdMultiplier]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="util-flex-col-gap-xl">
       
       {/* Metrics Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+      <div className="util-grid-4">
         
         {/* Occupancy card */}
-        <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '6px', borderLeft: '3px solid var(--neon-cyan)' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ borderLeft: '3px solid var(--neon-cyan)', padding: '14px 18px' }}>
           <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>LIVE ATTENDANCE</span>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <div className="util-flex-between-baseline">
             <span style={{ fontSize: '1.3rem', fontWeight: 900, fontFamily: 'Outfit', color: 'var(--neon-cyan)', textShadow: '0 0 10px rgba(0, 240, 255, 0.2)' }}>
               {Math.round(62400 * crowdMultiplier).toLocaleString()}
             </span>
             <span style={{ fontSize: '0.68rem', color: 'var(--fifa-green)', fontWeight: 800 }}>82% CAP</span>
           </div>
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '99px', overflow: 'hidden', marginTop: '4px' }}>
+          <div className="util-progress-bar-track">
             <div style={{ width: `${Math.min(82 * crowdMultiplier, 100)}%`, height: '100%', background: 'var(--neon-cyan)', boxShadow: '0 0 8px var(--neon-cyan)' }}></div>
           </div>
         </div>
 
         {/* Cleanliness rating */}
-        <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '6px', borderLeft: '3px solid var(--fifa-green)' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ borderLeft: '3px solid var(--fifa-green)', padding: '14px 18px' }}>
           <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>GRID EFFICIENCY</span>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <div className="util-flex-between-baseline">
             <span style={{ fontSize: '1.3rem', fontWeight: 900, fontFamily: 'Outfit', color: 'var(--fifa-green)', textShadow: '0 0 10px rgba(0, 255, 170, 0.2)' }}>
               89.4%
             </span>
             <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 800 }}>SOLAR LOAD</span>
           </div>
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '99px', overflow: 'hidden', marginTop: '4px' }}>
+          <div className="util-progress-bar-track">
             <div style={{ width: '89.4%', height: '100%', background: 'var(--fifa-green)', boxShadow: '0 0 8px var(--fifa-green)' }}></div>
           </div>
         </div>
 
         {/* Shuttles Active */}
-        <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '6px', borderLeft: '3px solid var(--neon-cyan)' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ borderLeft: '3px solid var(--neon-cyan)', padding: '14px 18px' }}>
           <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>ACTIVE SHUTTLES</span>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <div className="util-flex-between-baseline">
             <span style={{ fontSize: '1.3rem', fontWeight: 900, fontFamily: 'Outfit', color: '#fff' }}>
               14 / 16
             </span>
             <span style={{ fontSize: '0.68rem', color: 'var(--fifa-green)', fontWeight: 800 }}>ECO-BUS</span>
           </div>
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '99px', overflow: 'hidden', marginTop: '4px' }}>
+          <div className="util-progress-bar-track">
             <div style={{ width: '87.5%', height: '100%', background: 'var(--neon-cyan)' }}></div>
           </div>
         </div>
 
         {/* Carbon Offset */}
-        <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '6px', borderLeft: '3px solid var(--warning-amber)' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ borderLeft: '3px solid var(--warning-amber)', padding: '14px 18px' }}>
           <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>TREES PLANTED</span>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <div className="util-flex-between-baseline">
             <span style={{ fontSize: '1.3rem', fontWeight: 900, fontFamily: 'Outfit', color: 'var(--warning-amber)', textShadow: '0 0 10px rgba(255, 170, 0, 0.2)' }}>
               4,129
             </span>
             <span style={{ fontSize: '0.68rem', color: 'var(--fifa-green)', fontWeight: 800 }}>+140 LIVE</span>
           </div>
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '99px', overflow: 'hidden', marginTop: '4px' }}>
+          <div className="util-progress-bar-track">
             <div style={{ width: '70%', height: '100%', background: 'var(--warning-amber)', boxShadow: '0 0 8px var(--warning-amber)' }}></div>
           </div>
         </div>
@@ -105,15 +105,15 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
       </div>
 
       {/* Analytics Charts Area */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
+      <div className="util-grid-1-2-to-1">
         
         {/* Ingress Flow area */}
-        <div className="glass-panel" style={{ padding: '18px', height: '250px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-panel util-chart-panel">
           <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Activity size={14} style={{ color: 'var(--neon-cyan)' }} />
             INGRESS FLOW INDEX RATES (FANS / HR)
           </h4>
-          <div style={{ flex: 1, fontSize: '0.68rem', opacity: 0.9 }}>
+          <div className="util-flex-1 util-text-xs" style={{ opacity: 0.9 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={flowData}>
                 <defs>
@@ -138,12 +138,12 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
         </div>
 
         {/* Waste Diversion Bar */}
-        <div className="glass-panel" style={{ padding: '18px', height: '250px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-panel util-chart-panel">
           <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Leaf size={14} style={{ color: 'var(--fifa-green)' }} />
             WASTE RECYCLING DIVERSION (TONS)
           </h4>
-          <div style={{ flex: 1, fontSize: '0.68rem', opacity: 0.9 }}>
+          <div className="util-flex-1 util-text-xs" style={{ opacity: 0.9 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={SUSTAINABILITY_DATA}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
@@ -160,11 +160,11 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
       </div>
 
       {/* Alerts Feed and Control Tweak Drawer */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '16px' }}>
+      <div className="util-grid-1-to-1-2">
         
         {/* SUTRA Alerts */}
-        <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="glass-panel util-flex-col-gap-md" style={{ padding: '18px' }}>
+          <div className="util-flex-between">
             <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Cpu size={14} style={{ color: 'var(--neon-cyan)' }} />
               PREDICTIVE AI RADAR ALERTS
@@ -178,7 +178,7 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: '180px' }}>
+          <div className="util-scroll-y-max-180">
             {PREDICTIVE_ALERTS.map(alert => (
               <div 
                 key={alert.id}
@@ -204,32 +204,23 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
         </div>
 
         {/* Dispatch Command Desk */}
-        <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-panel util-flex-col-gap-md" style={{ padding: '18px' }}>
           <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ShieldAlert size={14} style={{ color: 'var(--alarm-crimson)' }} />
             ACTIVE INCIDENTS DISPATCH BOARD
           </h4>
 
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '140px' }}>
+          <div className="util-flex-col-gap-xs" style={{ flex: 1, overflowY: 'auto', maxHeight: '140px' }}>
             {incidents.filter(i => i.status !== 'resolved').length > 0 ? (
               incidents.filter(i => i.status !== 'resolved').map(incident => (
                 <div 
                   key={incident.id}
                   onClick={() => onSelectIncident(incident)}
+                  className="glass-card-interactive util-flex-between"
                   style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: 'rgba(255,255,255,0.01)',
                     padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-muted)',
-                    cursor: 'pointer',
-                    fontSize: '0.72rem',
-                    transition: 'all 0.2s'
+                    fontSize: '0.72rem'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.2)'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-muted)'}
                 >
                   <div>
                     <span style={{ fontWeight: 800, color: '#fff' }}>{incident.title}</span>
@@ -253,13 +244,13 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
           </div>
           
           {/* Simulation console */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+          <div className="util-flex-between" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '12px', gap: '16px' }}>
+            <div className="util-flex-align-center-gap-sm" style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
               <Users size={14} style={{ color: 'var(--neon-cyan)' }} />
               <span>CROWD INGRESS SCALER:</span>
             </div>
             
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="util-flex-1 util-flex-align-center-gap-md">
               <input 
                 type="range" 
                 min="0.5" 
@@ -279,4 +270,4 @@ export const ControlTower: React.FC<ControlTowerProps> = ({
 
     </div>
   );
-};
+});

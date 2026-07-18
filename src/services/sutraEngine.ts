@@ -253,6 +253,13 @@ export async function sendQueryToSutraAgent(
   persona: 'fan' | 'staff' | 'organizer',
   useSpeech: boolean = false
 ): Promise<string> {
+  if (!query || typeof query !== 'string' || query.trim() === '') {
+    return '⚠️ Query cannot be empty.';
+  }
+  if (query.length > 2000) {
+    return '⚠️ Query length exceeds maximum limit of 2000 characters.';
+  }
+  
   const ragMatches = searchRAG(query);
   
   // Create conversation array formatted for standard LLM APIs
@@ -290,19 +297,20 @@ export async function sendQueryToSutraAgent(
       try {
         const jsonErr = JSON.parse(errText);
         parsedErr = jsonErr.error || jsonErr.message || errText;
-      } catch (e) {
+      } catch {
         // Not JSON
       }
       throw new Error(`API returned status ${response.status}: ${parsedErr}`);
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn("SUTRA API Offline or Unconfigured. Falling back to local RAG Engine.", err);
     
     // Simulate API delay for realism
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const localReply = generateLocalResponse(query, persona, ragMatches);
-    const warningPrefix = `⚠️ **Local RAG Fallback** (API Error: *${err.message || 'Connection failed'}*)\n\n`;
+    const errMessage = err instanceof Error ? err.message : 'Connection failed';
+    const warningPrefix = `⚠️ **Local RAG Fallback** (API Error: *${errMessage}*)\n\n`;
     
     const combinedReply = warningPrefix + localReply;
     
@@ -313,16 +321,11 @@ export async function sendQueryToSutraAgent(
   }
 }
 
-// Text to Speech (TTS) Accessibility Helper
 export function speakText(text: string) {
-  // Strip Markdown characters for cleaner speech audio
-  const cleanText = text
-    .replace(/[#*`_~]/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/🤖|♿|🚌|🌱|📍|🚨|💡|📋|⚙️/g, '');
-
-  window.speechSynthesis.cancel(); // Cancel any ongoing speech
+  if (!('speechSynthesis' in window)) return;
   
+  // Strip markdown characters before speaking
+  const cleanText = text.replace(/[*_~`#><|]/g, '').replace(/\n+/g, '. ');
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.rate = 1.05;
   utterance.pitch = 1.0;
@@ -337,16 +340,42 @@ export function speakText(text: string) {
   window.speechSynthesis.speak(utterance);
 }
 
-interface ExtendedWindow extends Window {
-  SpeechRecognition?: any;
-  webkitSpeechRecognition?: any;
+export interface SpeechRecognitionInstance {
+  continuous: boolean;
+  lang: string;
+  interimResults: boolean;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onend: () => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+export interface SpeechRecognitionEvent {
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+export interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+export interface ExtendedWindow extends Window {
+  SpeechRecognition?: { new (): SpeechRecognitionInstance };
+  webkitSpeechRecognition?: { new (): SpeechRecognitionInstance };
 }
 
 export function startVoiceRecognition(
   onTranscript: (text: string) => void,
   onEnd: () => void,
-  onError: (err: any) => void
-): any {
+  onError: (err: string | unknown) => void
+): SpeechRecognitionInstance | null {
   // Check browser compatibility (WebkitSpeechRecognition)
   const SpeechRecognition = (window as unknown as ExtendedWindow).SpeechRecognition || 
                             (window as unknown as ExtendedWindow).webkitSpeechRecognition;
@@ -361,7 +390,7 @@ export function startVoiceRecognition(
   recognition.lang = 'en-US';
   recognition.interimResults = false;
 
-  recognition.onresult = (event: any) => {
+  recognition.onresult = (event: SpeechRecognitionEvent) => {
     const transcript = event.results[0][0].transcript;
     onTranscript(transcript);
   };
@@ -370,7 +399,7 @@ export function startVoiceRecognition(
     onEnd();
   };
 
-  recognition.onerror = (event: any) => {
+  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
     onError(event.error);
     onEnd();
   };

@@ -59,4 +59,49 @@ describe('StadiumMap Component', () => {
     fireEvent.click(gateText);
     expect(mockOnSelect).toHaveBeenCalled();
   });
+
+  it('contains the correct accessibility roles and attributes', () => {
+    render(
+      <StadiumMap 
+        mode="wayfinding"
+        selectedFeatureId={null}
+        onSelectFeature={mockOnSelect}
+        incidents={[]}
+        accessibilityOnly={false}
+        waypointStart="gate-a"
+        waypointEnd="sec-102"
+      />
+    );
+    
+    const svgElement = screen.getByRole('img', { name: /stadium blueprint map/i });
+    expect(svgElement).toBeDefined();
+    expect(svgElement.getAttribute('role')).toBe('img');
+    expect(svgElement.getAttribute('aria-label')).toContain('stadium blueprint map');
+  });
+
+  it('handles zoom button click interactions', () => {
+    render(
+      <StadiumMap 
+        mode="wayfinding"
+        selectedFeatureId={null}
+        onSelectFeature={mockOnSelect}
+        incidents={[]}
+        accessibilityOnly={false}
+        waypointStart="gate-a"
+        waypointEnd="sec-102"
+      />
+    );
+
+    const zoomInButton = screen.getByLabelText('Zoom In');
+    const zoomOutButton = screen.getByLabelText('Zoom Out');
+    const resetZoomButton = screen.getByLabelText('Reset Map view');
+
+    expect(zoomInButton).toBeDefined();
+    expect(zoomOutButton).toBeDefined();
+    expect(resetZoomButton).toBeDefined();
+
+    fireEvent.click(zoomInButton);
+    fireEvent.click(zoomOutButton);
+    fireEvent.click(resetZoomButton);
+  });
 });

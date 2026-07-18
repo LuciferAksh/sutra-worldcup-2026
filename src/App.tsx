@@ -1,7 +1,5 @@
 import { useState, Suspense, lazy, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FanCompanion } from './components/FanCompanion';
-import { StaffDashboard } from './components/StaffDashboard';
 import { StadiumMap } from './components/StadiumMap';
 import type { MapFeature, IncidentMarker } from './components/StadiumMap';
 import { Sparkles, User, Settings, Layers, UserCheck } from 'lucide-react';
@@ -9,6 +7,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { TestConsole } from './components/TestConsole';
 import type { TestLogEntry } from './components/TestConsole';
 
+const FanCompanion = lazy(() => import('./components/FanCompanion').then(module => ({ default: module.FanCompanion })));
+const StaffDashboard = lazy(() => import('./components/StaffDashboard').then(module => ({ default: module.StaffDashboard })));
 const ControlTower = lazy(() => import('./components/ControlTower').then(module => ({ default: module.ControlTower })));
 
 export default function App() {
@@ -51,7 +51,7 @@ export default function App() {
     setTestLogs(prev => [entry, ...prev].slice(0, 15));
   }, []);
 
-  const runSimulatedTests = async () => {
+  const runSimulatedTests = useCallback(async () => {
     setIsRunningTests(true);
     setTestLogs([{ id: `log-${Date.now()}-run`, text: `[Running] Initializing SUTRA test harness...` }]);
     
@@ -70,7 +70,7 @@ export default function App() {
       setTestLogs(prev => [{ id: `log-${Date.now()}-${i}-log`, text: `${steps[i].log || '[Success] ' + steps[i].text}` }, ...prev]);
     }
     setIsRunningTests(false);
-  };
+  }, []);
 
   const handleRouteSelect = useCallback((start: string, end: string) => {
     setRouteStart(start);
@@ -86,6 +86,12 @@ export default function App() {
   const handleSelectIncident = useCallback((incident: IncidentMarker | null) => {
     setSelectedIncident(incident);
     if (incident) logEvent(`Incident focus: "${incident.title}"`);
+  }, [logEvent]);
+
+  const handleSelectIncidentAndSwitch = useCallback((incident: IncidentMarker) => {
+    setSelectedIncident(incident);
+    setActivePersona('staff');
+    if (incident) logEvent(`Incident focus & dispatch: "${incident.title}"`);
   }, [logEvent]);
 
   // Dispatch action
@@ -125,32 +131,32 @@ export default function App() {
   }, [handleAddIncident, logEvent]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-primary)', overflow: 'hidden', position: 'relative' }}>
+    <div className="app-container">
       
       {/* Floating ambient drifting background glows */}
       <div className="bg-glow-blob bg-glow-1"></div>
       <div className="bg-glow-blob bg-glow-2"></div>
       
       {/* Premium Header Nav Bar */}
-      <header className="glass-panel" style={{ height: 'var(--nav-height)', margin: '12px 20px 0 20px', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px', zIndex: 100, border: '1px solid rgba(0, 240, 255, 0.12)', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.4)' }}>
+      <header className="glass-panel app-header">
         
         {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: 'linear-gradient(135deg, var(--neon-cyan) 0%, var(--fifa-green) 100%)', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 15px rgba(0, 240, 255, 0.3)' }}>
+        <div className="util-flex-align-center-gap-md">
+          <div className="app-logo-box">
             <Sparkles size={18} style={{ color: '#000' }} />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h1 className="app-logo-text">
               SUTRA <span style={{ color: 'var(--neon-cyan)', fontSize: '0.75rem', border: '1px solid var(--border-glow)', padding: '2px 6px', borderRadius: '6px', fontWeight: 700 }}>2026</span>
             </h1>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block', marginTop: '-2px' }}>
+            <span className="app-logo-sub">
               Stadium Unified Tournament Response Assistant
             </span>
           </div>
         </div>
 
         {/* Persona Switch Tab Menu */}
-        <nav style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-muted)', borderRadius: '12px', padding: '4px', gap: '4px', position: 'relative' }}>
+        <nav role="tablist" className="app-nav-tabs">
           {[
             { id: 'fan', name: 'Fan Companion', icon: User, activeBg: 'linear-gradient(135deg, var(--neon-cyan) 0%, #0077ff 100%)', activeColor: 'var(--neon-cyan)', textColor: '#000' },
             { id: 'staff', name: 'Staff & Volunteers', icon: UserCheck, activeBg: 'linear-gradient(135deg, var(--alarm-crimson) 0%, #cc003c 100%)', activeColor: 'var(--alarm-crimson)', textColor: '#fff' },
@@ -161,26 +167,16 @@ export default function App() {
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-label={tab.name}
                 onClick={() => {
                   setActivePersona(tab.id as 'fan' | 'staff' | 'organizer');
                   logEvent(`Switched persona to: ${tab.id.toUpperCase()}`);
                 }}
+                className="app-nav-tab-btn"
                 style={{
-                  padding: '8px 16px',
-                  fontSize: '0.8rem',
-                  fontWeight: 800,
-                  borderRadius: '10px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  position: 'relative',
-                  background: 'transparent',
-                  color: isActive ? tab.textColor : 'var(--text-secondary)',
-                  transition: 'color 0.25s ease',
-                  outline: 'none',
-                  zIndex: 1
+                  color: isActive ? tab.textColor : undefined
                 }}
               >
                 {isActive && (
@@ -191,18 +187,18 @@ export default function App() {
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
-                <Icon size={14} style={{ position: 'relative', zIndex: 2 }} />
-                <span style={{ position: 'relative', zIndex: 2 }}>{tab.name}</span>
+                <Icon size={14} className="util-rel-z2" />
+                <span className="util-rel-z2">{tab.name}</span>
               </button>
             );
           })}
         </nav>
 
         {/* Connection Settings & Indicators */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="util-flex-align-center-gap-md2">
           
           {/* Live System Indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+          <div className="app-indicator-text">
             <span className="live-pulse" style={{ background: savedSettings && provider === 'azure-openai' ? 'var(--neon-cyan)' : 'var(--fifa-green)' }}></span>
             <span>{savedSettings && provider === 'azure-openai' ? 'Vercel Serverless Live' : 'SUTRA AI Local'}</span>
           </div>
@@ -210,20 +206,8 @@ export default function App() {
           {/* Test Console Trigger */}
           <button 
             onClick={() => setShowTestConsole(true)}
-            style={{
-              background: 'rgba(0, 240, 255, 0.05)',
-              border: '1px solid var(--border-glow)',
-              borderRadius: '8px',
-              padding: '6px 12px',
-              cursor: 'pointer',
-              color: 'var(--neon-cyan)',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
-            }}
+            aria-label="Open SUTRA Test Console"
+            className="app-test-console-btn"
           >
             🧪 Test Console
           </button>
@@ -231,18 +215,8 @@ export default function App() {
           {/* Settings Trigger button */}
           <button 
             onClick={() => setShowConfigModal(true)}
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid var(--border-muted)',
-              borderRadius: '8px',
-              padding: '8px',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
+            aria-label="Configure SUTRA Settings"
+            className="app-settings-btn"
           >
             <Settings size={16} />
           </button>
@@ -252,10 +226,10 @@ export default function App() {
       </header>
 
       {/* Main Grid Workspace */}
-      <main className="layout-grid">
+      <main id="main-content" className="layout-grid">
         
         {/* Left Side: Dynamic Persona Dashboards */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: '43%', height: '100%', overflowY: 'auto', paddingRight: '8px', flexShrink: 0 }}>
+        <div className="app-sidebar">
           
           <AnimatePresence mode="wait">
             
@@ -266,14 +240,16 @@ export default function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
-                style={{ display: 'flex', flexDirection: 'column' }}
+                className="util-flex-col"
               >
-                <FanCompanion 
-                  onRouteSelect={handleRouteSelect}
-                  selectedFeature={selectedFeature}
-                  accessibilityOnly={accessibilityOnly}
-                  setAccessibilityOnly={setAccessibilityOnly}
-                />
+                <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-secondary)' }}>Loading Fan Companion...</div>}>
+                  <FanCompanion 
+                    onRouteSelect={handleRouteSelect}
+                    selectedFeature={selectedFeature}
+                    accessibilityOnly={accessibilityOnly}
+                    setAccessibilityOnly={setAccessibilityOnly}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
@@ -284,15 +260,17 @@ export default function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
-                style={{ display: 'flex', flexDirection: 'column' }}
+                className="util-flex-col"
               >
-                <StaffDashboard 
-                  incidents={incidents}
-                  onAddIncident={handleAddIncident}
-                  onUpdateIncidentStatus={handleUpdateIncidentStatus}
-                  selectedIncident={selectedIncident}
-                  onSelectIncident={handleSelectIncident}
-                />
+                <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-secondary)' }}>Loading Staff Workspace...</div>}>
+                  <StaffDashboard 
+                    incidents={incidents}
+                    onAddIncident={handleAddIncident}
+                    onUpdateIncidentStatus={handleUpdateIncidentStatus}
+                    selectedIncident={selectedIncident}
+                    onSelectIncident={handleSelectIncident}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
@@ -303,18 +281,15 @@ export default function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
-                style={{ display: 'flex', flexDirection: 'column' }}
+                className="util-flex-col"
               >
-                <Suspense fallback={<div className="glass-panel" style={{ padding: '24px', color: 'var(--text-secondary)', textAlign: 'center', fontSize: '0.8rem' }}>Loading Control Tower Analytics...</div>}>
+                <Suspense fallback={<div className="glass-panel util-p-4 util-text-sm" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Loading Control Tower Analytics...</div>}>
                   <ControlTower 
                     incidents={incidents}
                     onTriggerRandomIncident={handleTriggerRandomIncident}
                     crowdMultiplier={crowdMultiplier}
                     setCrowdMultiplier={setCrowdMultiplier}
-                    onSelectIncident={(inc) => {
-                      setSelectedIncident(inc);
-                      setActivePersona('staff'); // Switch back to staff to display incident workspace details
-                    }}
+                    onSelectIncident={handleSelectIncidentAndSwitch}
                   />
                 </Suspense>
               </motion.div>
@@ -325,16 +300,13 @@ export default function App() {
         </div>
 
         {/* Right Side: Constant Interactive Stadium Blueprint */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: '57%', height: '100%', flexShrink: 0 }}>
+        <div className="app-main-map-container">
           <StadiumMap 
             mode={activePersona === 'fan' ? 'wayfinding' : activePersona === 'staff' ? 'incidents' : 'heatmap'}
             selectedFeatureId={selectedFeature ? selectedFeature.id : null}
             onSelectFeature={handleSelectFeature}
             incidents={incidents}
-            onSelectIncident={(inc) => {
-              setSelectedIncident(inc);
-              setActivePersona('staff'); // Switch to volunteer view to handle dispatching
-            }}
+            onSelectIncident={handleSelectIncidentAndSwitch}
             accessibilityOnly={accessibilityOnly}
             waypointStart={routeStart}
             waypointEnd={routeEnd}

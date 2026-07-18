@@ -108,6 +108,8 @@ Guidelines:
   if (GEMINI_API_KEY) {
     const modelsToTry = [
       process.env.GEMINI_MODEL,
+      "gemini-3.1-pro",
+      "gemini-3.1-flash",
       "gemini-2.5-flash",
       "gemini-2.5-pro",
       "gemini-2.0-flash",
@@ -187,10 +189,13 @@ Guidelines:
   const geminiKeyStatus = GEMINI_API_KEY ? "Configured" : "Missing";
   const openaiKeyStatus = OPENAI_API_KEY ? "Configured" : "Missing";
 
-  return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check your Vercel Dashboard environment variable configuration.`;
+  return `☁️ **Proxy Telemetry** (Simulation Mode):\n\nProcessed query: *"${query}"*\nPersona Context: **${persona.toUpperCase()}**\n\n**Environment Configuration Audit:**\n• \`GEMINI_API_KEY\`: ${geminiKeyStatus}\n• \`OPENAI_API_KEY\`: ${openaiKeyStatus}\n• \`AZURE_OPENAI_KEY\`: ${azureKeyStatus}\n• \`AZURE_OPENAI_ENDPOINT\`: ${azureEndpointStatus}\n\n**Connection Diagnostics & Errors:**\n${apiErrors.length > 0 ? apiErrors.map(e => `• ${e}`).join('\n') : "• No credentials detected. Please configure environment variables."}\n\n*Note:* If you see connection errors above, please check your Vercel Dashboard environment variable configuration.`;
 }
 
 export default async function handler(req, res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+
   const origin = req.headers?.origin || '';
   const isAllowedOrigin = origin === '' || 
                           origin.startsWith('http://localhost:') || 
@@ -222,12 +227,12 @@ export default async function handler(req, res) {
 
     const { query, history, persona: rawPersona, ragContext } = body || {};
 
-    if (!query) {
+    if (!query || typeof query !== 'string' || query.length > 2000) {
       res.writeHead(400, {
         "Access-Control-Allow-Origin": allowOrigin,
         "Content-Type": "application/json"
       });
-      res.end(JSON.stringify({ error: "Query is required" }));
+      res.end(JSON.stringify({ error: "Invalid query or query exceeds maximum allowed length of 2000 characters." }));
       return;
     }
 

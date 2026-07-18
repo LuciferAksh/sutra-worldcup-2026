@@ -77,19 +77,19 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="util-flex-col-gap-xl">
       
       {/* Upper Grid Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
+      <div className="util-grid-1-2-to-1">
         
         {/* Incident Reporter Form Card */}
-        <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ padding: '18px' }}>
           <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <PlusCircle size={14} style={{ color: 'var(--alarm-crimson)' }} />
             DISPATCH NEW REPORT PIN
           </h4>
 
-          <form onSubmit={handleSubmitIncident} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.75rem' }}>
+          <form onSubmit={handleSubmitIncident} className="util-flex-col-gap-md util-text-xs">
             <div>
               <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Hazard Description</span>
               <input 
@@ -98,7 +98,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 placeholder="e.g. Water puddle on Section 112 steps" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none', marginTop: '4px' }}
+                className="util-input-base util-w-full"
+                style={{ marginTop: '4px' }}
               />
             </div>
 
@@ -109,7 +110,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                   aria-label="Incident Category"
                   value={category} 
                   onChange={(e) => setCategory(e.target.value as 'cleaning' | 'security' | 'medical' | 'technical')}
-                  style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none' }}
+                  className="util-select-base util-w-full"
                 >
                   <option value="cleaning">🧹 CLEANING / SPILL</option>
                   <option value="security">🛡️ CROWD SECURITY</option>
@@ -124,7 +125,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                   aria-label="Incident Location Zone"
                   value={locationId} 
                   onChange={(e) => setLocationId(e.target.value)}
-                  style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none' }}
+                  className="util-select-base util-w-full"
                 >
                   {MAP_FEATURES.map(f => (
                     <option key={f.id} value={f.id}>{f.name.split(' (')[0]}</option>
@@ -144,20 +145,21 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         </div>
 
         {/* Multilingual Translator Hub */}
-        <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-panel util-flex-col-gap-sm" style={{ padding: '18px' }}>
           <h4 style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Globe size={14} style={{ color: 'var(--neon-cyan)' }} />
             STAFF TRANSLATOR RADAR
           </h4>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.75rem' }}>
+          <div className="util-flex-col-gap-md util-text-xs">
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Convert Fan Query</span>
               <select 
                 aria-label="Target Translation Language"
                 value={translateTarget} 
                 onChange={(e) => setTranslateTarget(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '6px', color: '#fff', padding: '2px 6px', fontSize: '0.65rem', fontWeight: 700 }}
+                className="util-select-base"
+                style={{ padding: '2px 6px', fontSize: '0.65rem', fontWeight: 700 }}
               >
                 <option value="es">to Spanish (ES)</option>
                 <option value="fr">to French (FR)</option>
@@ -170,7 +172,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               placeholder="e.g. where is the nearest medical station?" 
               value={translateQuery}
               onChange={(e) => setTranslateQuery(e.target.value)}
-              style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-muted)', borderRadius: '8px', color: '#fff', outline: 'none' }}
+              className="util-input-base util-w-full"
             />
 
             <button 
@@ -182,7 +184,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             </button>
 
             {translatedText && (
-              <div style={{ background: 'rgba(0, 240, 255, 0.03)', border: '1px solid rgba(0, 240, 255, 0.15)', padding: '10px', borderRadius: '8px', fontSize: '0.72rem', color: 'var(--neon-cyan)', fontWeight: 600, lineHeight: '1.45', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+              <div className="util-chat-user util-w-full" style={{ padding: '10px', border: '1px solid rgba(0, 240, 255, 0.15)', color: 'var(--neon-cyan)', fontWeight: 600, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                 {translatedText}
               </div>
             )}
@@ -192,9 +194,9 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
       </div>
 
       {/* Dispatch Feed Command Drawer */}
-      <div className="glass-panel" style={{ flex: 1, minHeight: '320px', display: 'flex', flexDirection: 'column', padding: '20px', gap: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="glass-panel util-flex-col-gap-md util-flex-1" style={{ minHeight: '320px', padding: '20px' }}>
+        <div className="util-border-bottom util-flex-between">
+          <div className="util-flex-align-center-gap-sm">
             <span className="live-pulse" style={{ background: 'var(--alarm-crimson)', boxShadow: '0 0 8px var(--alarm-crimson-glow)' }}></span>
             <h4 style={{ fontSize: '0.9rem', fontWeight: 900, fontFamily: 'Outfit', letterSpacing: '0.5px' }}>DISPATCH COMMAND FEED</h4>
           </div>
@@ -203,10 +205,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', flex: 1, overflow: 'hidden' }}>
+        <div className="util-grid-1-2-to-1" style={{ gap: '20px', flex: 1, overflow: 'hidden' }}>
           
           {/* List queue */}
-          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+          <div className="util-flex-col" style={{ overflowY: 'auto', gap: '8px', paddingRight: '4px' }}>
             {incidents.map((incident) => {
               const isSelected = selectedIncident?.id === incident.id;
               
@@ -227,25 +229,22 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 <div 
                   key={incident.id}
                   onClick={() => onSelectIncident(incident)}
+                  className="util-flex-col util-rounded-lg util-cursor-pointer"
                   style={{
                     padding: '12px 14px',
-                    borderRadius: '10px',
                     background: cardBg,
                     border: borderStyle,
-                    cursor: 'pointer',
                     transition: 'all 0.25s',
-                    display: 'flex',
-                    flexDirection: 'column',
                     gap: '6px'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="util-flex-between">
                     <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#fff' }}>{incident.title}</span>
                     <span className={`badge ${incident.status === 'pending' ? 'badge-crimson' : 'badge-amber'}`}>
                       {incident.status.toUpperCase()}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  <div className="util-flex-between util-text-xs" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
                     <span>TYPE: {incident.category.toUpperCase()}</span>
                     <span>COORDS: {incident.x}, {incident.y}</span>
                   </div>
@@ -255,9 +254,9 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           </div>
 
           {/* Details Drawer */}
-          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.04)', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="util-flex-col-gap-lg" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)', paddingLeft: '20px' }}>
             {selectedIncident ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%' }}>
+              <div className="util-flex-col-gap-lg util-h-full">
                 <div>
                   <span className="badge badge-cyan" style={{ marginBottom: '6px' }}>Incident Triage</span>
                   <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
@@ -281,7 +280,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                   </div>
                 </div>
 
-                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="util-flex-col" style={{ marginTop: 'auto', gap: '8px' }}>
                   {selectedIncident.status === 'pending' && (
                     <button 
                       onClick={() => onUpdateIncidentStatus(selectedIncident.id, 'dispatched')}
@@ -320,7 +319,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '0.75rem', textAlign: 'center', gap: '8px' }}>
+              <div className="util-flex-col" style={{ justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '0.75rem', textAlign: 'center', gap: '8px' }}>
                 <Shield size={32} style={{ color: 'var(--text-muted)', marginBottom: '4px' }} />
                 <span style={{ fontWeight: 700, color: '#fff' }}>NO INCIDENT FOCUS</span>
                 Select a card in the queue to coordinate field volunteer routing and auto-triage.

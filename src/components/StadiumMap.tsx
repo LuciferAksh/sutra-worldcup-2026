@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, memo, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
@@ -58,7 +58,7 @@ export const SECTOR_SECTIONS = [
   { id: 'sec-west', path: 'M 190 530 A 230 230 0 0 1 70 300 A 230 230 0 0 1 190 70 L 230 140 A 150 150 0 0 0 150 300 A 150 150 0 0 0 230 460 Z', color: 'rgba(255, 170, 0, 0.4)', stroke: 'var(--warning-amber)', density: 'Moderate (58%)', name: 'West Stand (Sector Delta)' }
 ];
 
-export const StadiumMap: React.FC<StadiumMapProps> = ({
+export const StadiumMap: React.FC<StadiumMapProps> = memo(({
   mode,
   selectedFeatureId,
   onSelectFeature,
@@ -74,6 +74,15 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredFeature, setHoveredFeature] = useState<MapFeature | null>(null);
   const lastMoveRef = useRef(0);
+
+  // Dynamic Heatmap Density Fluctuation Simulation
+  const [densityOffset, setDensityOffset] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDensityOffset(Math.random() * 6 - 3); // ±3% fluctuation
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const getWaypointCoords = (id: string) => {
     const feature = MAP_FEATURES.find(f => f.id === id);
@@ -105,7 +114,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
     return `M ${start.x} ${start.y} Q ${midX + 30} ${midY - 30} ${end.x} ${end.y}`;
   };
 
-  const pathString = getWayfindingPath();
+  const pathString = useMemo(() => {
+    return getWayfindingPath();
+  }, [waypointStart, waypointEnd, accessibilityOnly]);
 
   const handleZoom = (direction: 'in' | 'out') => {
     setZoom(prev => (direction === 'in' ? Math.min(prev + 0.25, 2.5) : Math.max(prev - 0.25, 1)));
@@ -166,13 +177,13 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
         
         {/* Controls Bar */}
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-secondary" style={{ padding: '8px' }} onClick={() => handleZoom('in')} title="Zoom In">
+          <button className="btn-secondary" style={{ padding: '8px' }} onClick={() => handleZoom('in')} title="Zoom In" aria-label="Zoom In">
             <ZoomIn size={14} />
           </button>
-          <button className="btn-secondary" style={{ padding: '8px' }} onClick={() => handleZoom('out')} title="Zoom Out">
+          <button className="btn-secondary" style={{ padding: '8px' }} onClick={() => handleZoom('out')} title="Zoom Out" aria-label="Zoom Out">
             <ZoomOut size={14} />
           </button>
-          <button className="btn-secondary" style={{ padding: '8px' }} onClick={resetMap} title="Recenter Blueprint">
+          <button className="btn-secondary" style={{ padding: '8px' }} onClick={resetMap} title="Recenter Blueprint" aria-label="Reset Map view">
             <Maximize2 size={14} />
           </button>
         </div>
@@ -200,6 +211,8 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
         
         <svg 
           viewBox="0 0 600 600" 
+          role="img"
+          aria-label="Interactive FIFA World Cup 2026 stadium blueprint map" 
           style={{ 
             width: '100%', 
             height: '100%', 
@@ -255,29 +268,35 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
           <AnimatePresence>
             {mode === 'heatmap' && (
               <g>
-                {SECTOR_SECTIONS.map((sector) => (
-                  <motion.path
-                    key={sector.id}
-                    d={sector.path}
-                    fill={sector.color}
-                    stroke={sector.stroke}
-                    strokeWidth="1.5"
-                    className="heatmap-pulse util-cursor-pointer"
-                    initial={{ fillOpacity: 0, strokeOpacity: 0 }}
-                    animate={{ fillOpacity: 0.3, strokeOpacity: 0.8 }}
-                    whileHover={{ fillOpacity: 0.55, strokeWidth: 3.5, filter: 'brightness(1.2)' }}
-                    exit={{ fillOpacity: 0, strokeOpacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    onClick={() => onSelectFeature({
-                      id: sector.id,
-                      name: sector.name,
-                      type: 'section',
-                      x: 300,
-                      y: 300,
-                      details: `Smart sensor analysis reports crowd loading at ${sector.density}. Consider routing to alternate sectors.`
-                    })}
-                  />
-                ))}
+                {SECTOR_SECTIONS.map((sector) => {
+                  const baseDensity = parseInt(sector.density.match(/\d+/) ? sector.density.match(/\d+/)![0] : '50');
+                  const currentDensity = Math.min(100, Math.max(10, Math.round(baseDensity + densityOffset)));
+                  return (
+                    <motion.path
+                      key={sector.id}
+                      d={sector.path}
+                      fill={sector.color}
+                      stroke={sector.stroke}
+                      strokeWidth="1.5"
+                      className="heatmap-pulse util-cursor-pointer"
+                      initial={{ fillOpacity: 0, strokeOpacity: 0 }}
+                      animate={{ fillOpacity: 0.3, strokeOpacity: 0.8 }}
+                      whileHover={{ fillOpacity: 0.55, strokeWidth: 3.5, filter: 'brightness(1.2)' }}
+                      exit={{ fillOpacity: 0, strokeOpacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      onClick={() => onSelectFeature({
+                        id: sector.id,
+                        name: sector.name,
+                        type: 'section',
+                        x: 300,
+                        y: 300,
+                        details: `Smart sensor analysis reports crowd loading at ${currentDensity}%. Consider routing to alternate sectors.`
+                      })}
+                    >
+                      <title>{sector.name} — Density: {currentDensity}%</title>
+                    </motion.path>
+                  );
+                })}
               </g>
             )}
           </AnimatePresence>
@@ -555,4 +574,4 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       
     </div>
   );
-};
+});

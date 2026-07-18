@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Settings } from 'lucide-react';
 
@@ -17,7 +17,7 @@ const SELECT_STYLE = { width: '100%', padding: '8px', background: 'var(--bg-seco
 const NOTE_BOX_STYLE = { color: 'var(--text-secondary)', fontSize: '0.7rem', background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-muted)', lineHeight: '1.4' } as const;
 const ACTION_BAR_STYLE = { display: 'flex', gap: '10px', marginTop: '4px' } as const;
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({
+export const SettingsModal: React.FC<SettingsModalProps> = memo(({
   show,
   onClose,
   provider,
@@ -32,11 +32,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
         className="glass-panel util-flex-col"
         style={CONTAINER_STYLE}
       >
         <div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'Outfit', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 id="settings-modal-title" style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'Outfit', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Settings size={18} style={{ color: 'var(--neon-cyan)' }} />
             SUTRA AI Engine Config
           </h3>
@@ -91,4 +94,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       </motion.div>
     </div>
   );
-};
+});

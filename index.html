@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.openai.com https://*.googleapis.com https://*.vercel.app; img-src 'self' data:; media-src 'self';" />
     <meta name="description" content="SUTRA is a GenAI-powered stadium operations platform for FIFA World Cup 2026, providing real-time wayfinding, accessibility support, crowd management, and sustainability tracking." />
     <meta name="theme-color" content="#060913" />
     <meta property="og:title" content="SUTRA — Stadium Unified Tournament Response Assistant" />
@@ -12,6 +13,7 @@
     <title>SUTRA | Stadium Unified Tournament Response Assistant — FIFA World Cup 2026</title>
   </head>
   <body>
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
